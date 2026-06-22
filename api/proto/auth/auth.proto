@@ -1,0 +1,17 @@
+syntax = "proto3";
+package auth;
+
+option go_package = "auth-service/internal/transport/grpc;authv1";
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  string user_id = 1;
+  bool is_valid = 2;
+}
+
+service AuthService {
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+}

@@ -1,0 +1,18 @@
+syntax = "proto3";
+package catalog;
+
+option go_package = "./catalog;catalogv1";
+
+message GetEventAvailabilityRequest {
+  string event_id = 1;
+}
+
+message GetEventAvailabilityResponse {
+  string event_id = 1;
+  int32 total_slots = 2;
+  int32 price_cents = 3;
+}
+
+service CatalogService {
+  rpc GetEventAvailability(GetEventAvailabilityRequest) returns (GetEventAvailabilityResponse);
+}
