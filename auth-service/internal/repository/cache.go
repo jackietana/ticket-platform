@@ -28,9 +28,12 @@ func (c *Cache) AddSession(ctx context.Context, session domain.Session) error {
 
 func (c *Cache) GetUserId(ctx context.Context, token string) (string, error) {
 	key := fmt.Sprintf("session:%s", token)
-	usrId := c.db.Get(ctx, key).Val()
-	if usrId == "" {
-		return "", errors.New("user by token not found")
+
+	usrId, err := c.db.Get(ctx, key).Result()
+	if nonexistent := errors.Is(err, redis.Nil); nonexistent {
+		return "", errors.New("session expires or not found")
+	} else if err != nil {
+		return "", fmt.Errorf("redis error: %w", err)
 	}
 
 	return usrId, nil
