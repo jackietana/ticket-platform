@@ -4,16 +4,16 @@ import (
 	"context"
 	"errors"
 
-	"github.com/jackietana/ticket-platform/auth-service/internal/service"
 	pb "github.com/jackietana/ticket-platform/auth-service/internal/transport/grpc/gen"
+	"github.com/jackietana/ticket-platform/auth-service/internal/transport/rest/v1"
 )
 
 type AuthServer struct {
 	pb.UnimplementedAuthServiceServer
-	authService *service.AuthService
+	authService rest.AuthService
 }
 
-func NewAuthServer(service *service.AuthService) *AuthServer {
+func NewAuthServer(service rest.AuthService) *AuthServer {
 	return &AuthServer{authService: service}
 }
 
@@ -25,7 +25,7 @@ func (s *AuthServer) ValidateToken(ctx context.Context, req *pb.ValidateTokenReq
 
 	userId, err := s.authService.GetUserIdByToken(ctx, token)
 	if err != nil {
-		return &pb.ValidateTokenResponse{IsValid: false}, err
+		return &pb.ValidateTokenResponse{IsValid: false}, nil
 	}
 
 	return &pb.ValidateTokenResponse{
