@@ -11,37 +11,49 @@ import (
 
 const CTX_TIMEOUT = time.Second * 5
 
+type UserRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,gte=6"`
+}
+
 func (h *Handler) SignUp(c *gin.Context) {
-	var usr domain.User
-	if err := c.BindJSON(&usr); err != nil {
-		c.String(http.StatusBadRequest, "invalid input body")
+	var usrReq UserRequest
+	if err := c.ShouldBindJSON(&usrReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input body"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), CTX_TIMEOUT)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), CTX_TIMEOUT)
 	defer cancel()
 
-	if err := h.auth.SignUp(ctx, usr); err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+	id, err := h.auth.SignUp(ctx, domain.User{
+		Email:    usrReq.Email,
+		Password: usrReq.Password,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.String(http.StatusCreated, "seccussfully signed up")
+	c.JSON(http.StatusCreated, gin.H{"id": id, "message": "successfully signed up"})
 }
 
 func (h *Handler) SignIn(c *gin.Context) {
-	var inp domain.UserInput
-	if err := c.BindJSON(&inp); err != nil {
-		c.String(http.StatusBadRequest, "invalid input body")
+	var usrReq UserRequest
+	if err := c.ShouldBindJSON(&usrReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input body"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), CTX_TIMEOUT)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), CTX_TIMEOUT)
 	defer cancel()
 
-	token, err := h.auth.SignIn(ctx, inp)
+	token, err := h.auth.SignIn(ctx, domain.User{
+		Email:    usrReq.Email,
+		Password: usrReq.Password,
+	})
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 

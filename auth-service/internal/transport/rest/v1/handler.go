@@ -8,9 +8,9 @@ import (
 )
 
 type AuthService interface {
-	SignUp(ctx context.Context, usr domain.User) error
-	SignIn(ctx context.Context, inp domain.UserInput) (string, error)
-	GetUserIdByToken(ctx context.Context, inp string) (string, error)
+	SignUp(ctx context.Context, usr domain.User) (string, error)
+	SignIn(ctx context.Context, usr domain.User) (string, error)
+	GetUserIdByToken(ctx context.Context, token string) (string, error)
 }
 
 type Handler struct {
@@ -23,12 +23,14 @@ func NewHandler(auth AuthService) *Handler {
 
 func (h *Handler) Init() *gin.Engine {
 	router := gin.New()
+	router.Use(gin.Logger(), gin.Recovery())
+
 	v1 := router.Group("/api/v1")
 	{
 		auth := v1.Group("/auth")
 		{
 			auth.POST("/sign-up", h.SignUp)
-			auth.GET("/sign-in", h.SignIn)
+			auth.POST("/sign-in", h.SignIn)
 		}
 	}
 
