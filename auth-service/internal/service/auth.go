@@ -10,9 +10,14 @@ import (
 	"github.com/jackietana/ticket-platform/auth-service/pkg/hash"
 )
 
+var (
+	ErrInvalidCredentials = errors.New("invalid email or password")
+	ErrTokenExpired       = errors.New("token expired or invalid")
+)
+
 type Repository interface {
-	CreateUser(ctx context.Context, usr domain.User) error
-	GetUser(ctx context.Context, inp domain.UserInput) (domain.User, error)
+	CreateUser(ctx context.Context, email, passwordHash string) (string, error)
+	GetUserByEmail(ctx context.Context, email string) (domain.User, error)
 }
 
 type Cache interface {
@@ -34,27 +39,33 @@ func NewAuthService(hasher *hash.SHA1Hasher, repo Repository, cache Cache) *Auth
 	}
 }
 
-func (s *AuthService) SignUp(ctx context.Context, usr domain.User) error {
-	hpass, err := s.hasher.Hash(usr.Password)
-	if err != nil {
-		return fmt.Errorf("error hashing password: %w", err)
-	}
-
-	usr.Password = hpass
-
-	return s.repo.CreateUser(ctx, usr)
-}
-
-func (s *AuthService) SignIn(ctx context.Context, inp domain.UserInput) (string, error) {
-	hpass, err := s.hasher.Hash(inp.Password)
+func (s *AuthService) SignUp(ctx context.Context, usr domain.User) (string, error) {
+	passHash, err := s.hasher.Hash(usr.Password)
 	if err != nil {
 		return "", fmt.Errorf("error hashing password: %w", err)
 	}
 
-	inp.Password = hpass
-	usr, err := s.repo.GetUser(ctx, inp)
+	id, err := s.repo.CreateUser(ctx, usr.Email, passHash)
 	if err != nil {
-		return "", fmt.Errorf("error getting user: %w", err)
+		return "", fmt.Errorf("error creating user in db: %w", err)
+	}
+
+	return id, nil
+}
+
+func (s *AuthService) SignIn(ctx context.Context, inp domain.User) (string, error) {
+	usr, err := s.repo.GetUserByEmail(ctx, inp.Email)
+	if err != nil {
+		return "", ErrInvalidCredentials
+	}
+
+	passHash, err := s.hasher.Hash(inp.Password)
+	if err != nil {
+		return "", fmt.Errorf("error hashing password: %w", err)
+	}
+
+	if usr.Password != passHash {
+		return "", ErrInvalidCredentials
 	}
 
 	token := uuid.New().String()
@@ -62,8 +73,11 @@ func (s *AuthService) SignIn(ctx context.Context, inp domain.UserInput) (string,
 		Token:  token,
 		UserId: usr.ID,
 	})
+	if err != nil {
+		return "", fmt.Errorf("error saving session to cache: %w", err)
+	}
 
-	return token, err
+	return token, nil
 }
 
 func (s *AuthService) GetUserIdByToken(ctx context.Context, token string) (string, error) {
@@ -73,7 +87,7 @@ func (s *AuthService) GetUserIdByToken(ctx context.Context, token string) (strin
 
 	userId, err := s.cache.GetUserId(ctx, token)
 	if err != nil {
-		return "", fmt.Errorf("error validating token: %w", err)
+		return "", ErrTokenExpired
 	}
 
 	return userId, nil
