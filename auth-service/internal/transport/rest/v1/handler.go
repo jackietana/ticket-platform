@@ -5,14 +5,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackietana/ticket-platform/auth-service/docs"
-	"github.com/jackietana/ticket-platform/auth-service/internal/domain"
+	"github.com/jackietana/ticket-platform/auth-service/internal/dto"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+//go:generate mockgen -source=handler.go -destination=mocks/mock.go
+
 type AuthService interface {
-	SignUp(ctx context.Context, usr domain.User) (string, error)
-	SignIn(ctx context.Context, usr domain.User, clientIp, userAgent string) (string, error)
+	SignUp(ctx context.Context, usr dto.UserRequest) (string, error)
+	SignIn(ctx context.Context, usr dto.UserRequest, clientIp, userAgent string) (string, error)
 	ValidateSession(ctx context.Context, token, clientIP, userAgent string) (string, error)
 }
 

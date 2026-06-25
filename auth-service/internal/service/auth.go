@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackietana/ticket-platform/auth-service/internal/domain"
+	"github.com/jackietana/ticket-platform/auth-service/internal/dto"
 	"github.com/jackietana/ticket-platform/auth-service/pkg/hash"
 )
 
@@ -40,13 +41,13 @@ func NewAuthService(hasher *hash.SHA1Hasher, repo Repository, cache Cache) *Auth
 	}
 }
 
-func (s *AuthService) SignUp(ctx context.Context, usr domain.User) (string, error) {
-	passHash, err := s.hasher.Hash(usr.Password)
+func (s *AuthService) SignUp(ctx context.Context, user dto.UserRequest) (string, error) {
+	passHash, err := s.hasher.Hash(user.Password)
 	if err != nil {
 		return "", fmt.Errorf("error hashing password: %w", err)
 	}
 
-	id, err := s.repo.CreateUser(ctx, usr.Email, passHash)
+	id, err := s.repo.CreateUser(ctx, user.Email, passHash)
 	if err != nil {
 		return "", fmt.Errorf("error creating user in db: %w", err)
 	}
@@ -54,8 +55,8 @@ func (s *AuthService) SignUp(ctx context.Context, usr domain.User) (string, erro
 	return id, nil
 }
 
-func (s *AuthService) SignIn(ctx context.Context, inp domain.User, clientIp, userAgent string) (string, error) {
-	usr, err := s.repo.GetUserByEmail(ctx, inp.Email)
+func (s *AuthService) SignIn(ctx context.Context, inp dto.UserRequest, clientIP, userAgent string) (string, error) {
+	user, err := s.repo.GetUserByEmail(ctx, inp.Email)
 	if err != nil {
 		return "", ErrInvalidCredentials
 	}
@@ -65,15 +66,15 @@ func (s *AuthService) SignIn(ctx context.Context, inp domain.User, clientIp, use
 		return "", fmt.Errorf("error hashing password: %w", err)
 	}
 
-	if usr.Password != passHash {
+	if user.Password != passHash {
 		return "", ErrInvalidCredentials
 	}
 
 	token := uuid.New().String()
 	err = s.cache.AddSession(ctx, domain.Session{
 		Token:     token,
-		UserID:    usr.ID,
-		ClientIP:  clientIp,
+		UserID:    user.ID,
+		ClientIP:  clientIP,
 		UserAgent: userAgent,
 	})
 	if err != nil {

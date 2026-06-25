@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackietana/ticket-platform/auth-service/internal/domain"
 	"github.com/jackietana/ticket-platform/auth-service/internal/dto"
 )
 
@@ -23,8 +22,8 @@ const CTX_TIMEOUT = time.Second * 5
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /api/v1/auth/sign-up [post]
 func (h *Handler) signUp(c *gin.Context) {
-	var usrReq dto.UserRequest
-	if err := c.ShouldBindJSON(&usrReq); err != nil {
+	var userReq dto.UserRequest
+	if err := c.ShouldBindJSON(&userReq); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid input body"})
 		return
 	}
@@ -32,10 +31,7 @@ func (h *Handler) signUp(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), CTX_TIMEOUT)
 	defer cancel()
 
-	id, err := h.auth.SignUp(ctx, domain.User{
-		Email:    usrReq.Email,
-		Password: usrReq.Password,
-	})
+	id, err := h.auth.SignUp(ctx, userReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
 		return
@@ -55,8 +51,8 @@ func (h *Handler) signUp(c *gin.Context) {
 // @Failure 401 {object} dto.ErrorResponse
 // @Router /api/v1/auth/sign-in [post]
 func (h *Handler) signIn(c *gin.Context) {
-	var usrReq dto.UserRequest
-	if err := c.ShouldBindJSON(&usrReq); err != nil {
+	var userReq dto.UserRequest
+	if err := c.ShouldBindJSON(&userReq); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid input body"})
 		return
 	}
@@ -64,10 +60,7 @@ func (h *Handler) signIn(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), CTX_TIMEOUT)
 	defer cancel()
 
-	token, err := h.auth.SignIn(ctx, domain.User{
-		Email:    usrReq.Email,
-		Password: usrReq.Password,
-	}, c.ClientIP(), c.GetHeader("User-Agent"))
+	token, err := h.auth.SignIn(ctx, userReq, c.ClientIP(), c.GetHeader("User-Agent"))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Error: err.Error()})
 		return
