@@ -22,7 +22,8 @@ type Repository interface {
 
 type Cache interface {
 	AddSession(ctx context.Context, session domain.Session) error
-	GetUserId(ctx context.Context, token string) (string, error)
+	GetSessionContext(ctx context.Context, token string) (domain.Session, error)
+	DeleteSession(ctx context.Context, session domain.Session) error
 }
 
 type AuthService struct {
@@ -53,7 +54,7 @@ func (s *AuthService) SignUp(ctx context.Context, usr domain.User) (string, erro
 	return id, nil
 }
 
-func (s *AuthService) SignIn(ctx context.Context, inp domain.User) (string, error) {
+func (s *AuthService) SignIn(ctx context.Context, inp domain.User, clientIp, userAgent string) (string, error) {
 	usr, err := s.repo.GetUserByEmail(ctx, inp.Email)
 	if err != nil {
 		return "", ErrInvalidCredentials
@@ -70,8 +71,10 @@ func (s *AuthService) SignIn(ctx context.Context, inp domain.User) (string, erro
 
 	token := uuid.New().String()
 	err = s.cache.AddSession(ctx, domain.Session{
-		Token:  token,
-		UserId: usr.ID,
+		Token:     token,
+		UserID:    usr.ID,
+		ClientIP:  clientIp,
+		UserAgent: userAgent,
 	})
 	if err != nil {
 		return "", fmt.Errorf("error saving session to cache: %w", err)
@@ -80,15 +83,20 @@ func (s *AuthService) SignIn(ctx context.Context, inp domain.User) (string, erro
 	return token, nil
 }
 
-func (s *AuthService) GetUserIdByToken(ctx context.Context, token string) (string, error) {
+func (s *AuthService) ValidateSession(ctx context.Context, token, clientIP, userAgent string) (string, error) {
 	if token == "" {
 		return "", errors.New("empty token provided")
 	}
 
-	userId, err := s.cache.GetUserId(ctx, token)
+	session, err := s.cache.GetSessionContext(ctx, token)
 	if err != nil {
 		return "", ErrTokenExpired
 	}
 
-	return userId, nil
+	if session.ClientIP != clientIP || session.UserAgent != userAgent {
+		_ = s.cache.DeleteSession(ctx, session)
+		return "", errors.New("session hijacking detected")
+	}
+
+	return session.UserID, nil
 }

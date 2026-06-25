@@ -11,13 +11,8 @@ import (
 
 const CTX_TIMEOUT = time.Second * 5
 
-type UserRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,gte=6"`
-}
-
 func (h *Handler) SignUp(c *gin.Context) {
-	var usrReq UserRequest
+	var usrReq domain.UserRequest
 	if err := c.ShouldBindJSON(&usrReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input body"})
 		return
@@ -39,7 +34,7 @@ func (h *Handler) SignUp(c *gin.Context) {
 }
 
 func (h *Handler) SignIn(c *gin.Context) {
-	var usrReq UserRequest
+	var usrReq domain.UserRequest
 	if err := c.ShouldBindJSON(&usrReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input body"})
 		return
@@ -51,7 +46,7 @@ func (h *Handler) SignIn(c *gin.Context) {
 	token, err := h.auth.SignIn(ctx, domain.User{
 		Email:    usrReq.Email,
 		Password: usrReq.Password,
-	})
+	}, c.ClientIP(), c.GetHeader("User-Agent"))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return

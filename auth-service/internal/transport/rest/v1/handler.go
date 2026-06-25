@@ -9,8 +9,8 @@ import (
 
 type AuthService interface {
 	SignUp(ctx context.Context, usr domain.User) (string, error)
-	SignIn(ctx context.Context, usr domain.User) (string, error)
-	GetUserIdByToken(ctx context.Context, token string) (string, error)
+	SignIn(ctx context.Context, usr domain.User, clientIp, userAgent string) (string, error)
+	ValidateSession(ctx context.Context, token, clientIP, userAgent string) (string, error)
 }
 
 type Handler struct {

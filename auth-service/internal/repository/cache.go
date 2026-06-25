@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -27,11 +28,15 @@ func NewCache(db *redis.Client) *Cache {
 }
 
 func (c *Cache) AddSession(ctx context.Context, session domain.Session) error {
-	userIdStr := session.UserId.String()
-	sessionsKey := fmt.Sprintf(SESSIONS_PLACEHOLDER, userIdStr)
+	sessionsKey := fmt.Sprintf(SESSIONS_PLACEHOLDER, session.UserID)
 	tokensKey := fmt.Sprintf(TOKENS_PLACEHOLDER, session.Token)
 
-	if err := c.clearExpiredSessions(ctx, session.UserId.String()); err != nil {
+	sessionBytes, err := json.Marshal(session)
+	if err != nil {
+		return fmt.Errorf("failed to marshal session: %w", err)
+	}
+
+	if err := c.clearExpiredSessions(ctx, session.UserID); err != nil {
 		return fmt.Errorf("failed to clear expired sessions: %w", err)
 	}
 
@@ -56,8 +61,8 @@ func (c *Cache) AddSession(ctx context.Context, session domain.Session) error {
 		}
 	}
 
-	if err := c.db.Set(ctx, tokensKey, session.UserId.String(), SESSION_TTL).Err(); err != nil {
-		return fmt.Errorf("failed to save token: %w", err)
+	if err := c.db.Set(ctx, tokensKey, string(sessionBytes), SESSION_TTL).Err(); err != nil {
+		return fmt.Errorf("failed to save session: %w", err)
 	}
 
 	if err := c.db.ZAdd(ctx, sessionsKey, redis.Z{
@@ -70,17 +75,37 @@ func (c *Cache) AddSession(ctx context.Context, session domain.Session) error {
 	return nil
 }
 
-func (c *Cache) GetUserId(ctx context.Context, token string) (string, error) {
-	key := fmt.Sprintf(TOKENS_PLACEHOLDER, token)
+func (c *Cache) DeleteSession(ctx context.Context, session domain.Session) error {
+	sessionsKey := fmt.Sprintf(SESSIONS_PLACEHOLDER, session.UserID)
+	tokensKey := fmt.Sprintf(TOKENS_PLACEHOLDER, session.Token)
 
-	usrId, err := c.db.Get(ctx, key).Result()
-	if nonexistent := errors.Is(err, redis.Nil); nonexistent {
-		return "", errors.New("session expires or not found")
-	} else if err != nil {
-		return "", fmt.Errorf("redis error: %w", err)
+	if err := c.db.ZRem(ctx, sessionsKey, session.Token).Err(); err != nil {
+		return fmt.Errorf("failed to delete session: %w", err)
 	}
 
-	return usrId, nil
+	if err := c.db.Del(ctx, tokensKey).Err(); err != nil {
+		return fmt.Errorf("failed to delete token: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Cache) GetSessionContext(ctx context.Context, token string) (domain.Session, error) {
+	var session domain.Session
+	key := fmt.Sprintf(TOKENS_PLACEHOLDER, token)
+
+	sessionStr, err := c.db.Get(ctx, key).Result()
+	if nonexistent := errors.Is(err, redis.Nil); nonexistent {
+		return domain.Session{}, errors.New("session expires or not found")
+	} else if err != nil {
+		return domain.Session{}, fmt.Errorf("redis error: %w", err)
+	}
+
+	if err := json.Unmarshal([]byte(sessionStr), &session); err != nil {
+		return domain.Session{}, fmt.Errorf("failed to unmarshal session: %w", err)
+	}
+
+	return session, nil
 }
 
 func (c *Cache) clearExpiredSessions(ctx context.Context, userId string) error {
