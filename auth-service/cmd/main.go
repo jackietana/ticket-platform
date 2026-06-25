@@ -23,12 +23,21 @@ import (
 	"google.golang.org/grpc"
 )
 
-// @title auth-service
+// @title Auth Service API
 // @version 1.0
-// @description auth-service providing authentication via PostgreSQL and Redis.
-
+// @description Authentication service providing user registration, login and token validation via PostgreSQL and Redis.
+//
 // @host localhost:8080
 // @BasePath /
+//
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+//
+// @schemes http
+//
+// @contact.name API Support
+// @contact.email support@example.com
 
 func main() {
 	// REST deps
