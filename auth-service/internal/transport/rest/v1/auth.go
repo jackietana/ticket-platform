@@ -7,14 +7,25 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackietana/ticket-platform/auth-service/internal/domain"
+	"github.com/jackietana/ticket-platform/auth-service/internal/dto"
 )
 
 const CTX_TIMEOUT = time.Second * 5
 
-func (h *Handler) SignUp(c *gin.Context) {
-	var usrReq domain.UserRequest
+// @Summary Sign Up
+// @Description Method for registration
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.UserRequest true "User credentials"
+// @Success 201 {object} dto.SignUpResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/v1/auth/sign-up [post]
+func (h *Handler) signUp(c *gin.Context) {
+	var usrReq dto.UserRequest
 	if err := c.ShouldBindJSON(&usrReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input body"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid input body"})
 		return
 	}
 
@@ -26,17 +37,27 @@ func (h *Handler) SignUp(c *gin.Context) {
 		Password: usrReq.Password,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": id, "message": "successfully signed up"})
+	c.JSON(http.StatusCreated, dto.SignUpResponse{ID: id, Message: "successfully signed up"})
 }
 
-func (h *Handler) SignIn(c *gin.Context) {
-	var usrReq domain.UserRequest
+// @Summary Sign In
+// @Description Method for authentication
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.UserRequest true "User credentials"
+// @Success 200 {object} dto.SignInResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /api/v1/auth/sign-in [post]
+func (h *Handler) signIn(c *gin.Context) {
+	var usrReq dto.UserRequest
 	if err := c.ShouldBindJSON(&usrReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input body"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid input body"})
 		return
 	}
 
@@ -48,9 +69,9 @@ func (h *Handler) SignIn(c *gin.Context) {
 		Password: usrReq.Password,
 	}, c.ClientIP(), c.GetHeader("User-Agent"))
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	c.JSON(http.StatusOK, dto.SignInResponse{Token: token})
 }

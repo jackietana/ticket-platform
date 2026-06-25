@@ -23,6 +23,13 @@ import (
 	"google.golang.org/grpc"
 )
 
+// @title auth-service
+// @version 1.0
+// @description auth-service providing authentication via PostgreSQL and Redis.
+
+// @host localhost:8080
+// @BasePath /
+
 func main() {
 	// REST deps
 	cfg, err := config.NewConfig()

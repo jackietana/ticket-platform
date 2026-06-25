@@ -4,7 +4,10 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/jackietana/ticket-platform/auth-service/docs"
 	"github.com/jackietana/ticket-platform/auth-service/internal/domain"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type AuthService interface {
@@ -29,10 +32,12 @@ func (h *Handler) Init() *gin.Engine {
 	{
 		auth := v1.Group("/auth")
 		{
-			auth.POST("/sign-up", h.SignUp)
-			auth.POST("/sign-in", h.SignIn)
+			auth.POST("/sign-up", h.signUp)
+			auth.POST("/sign-in", h.signIn)
 		}
 	}
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return router
 }

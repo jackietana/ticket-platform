@@ -11,11 +11,6 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type UserRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,gte=6"`
-}
-
 type Session struct {
 	Token     string `json:"token"`
 	UserID    string `json:"user_id"`
