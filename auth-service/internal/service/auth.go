@@ -8,13 +8,18 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackietana/ticket-platform/auth-service/internal/domain"
 	"github.com/jackietana/ticket-platform/auth-service/internal/dto"
-	"github.com/jackietana/ticket-platform/auth-service/pkg/hash"
 )
+
+//go:generate mockgen -source=auth.go -destination=mocks/mock.go
 
 var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrTokenExpired       = errors.New("token expired or invalid")
 )
+
+type Hasher interface {
+	Hash(input string) (string, error)
+}
 
 type Repository interface {
 	CreateUser(ctx context.Context, email, passwordHash string) (string, error)
@@ -28,12 +33,12 @@ type Cache interface {
 }
 
 type AuthService struct {
-	hasher *hash.SHA1Hasher
+	hasher Hasher
 	repo   Repository
 	cache  Cache
 }
 
-func NewAuthService(hasher *hash.SHA1Hasher, repo Repository, cache Cache) *AuthService {
+func NewAuthService(hasher Hasher, repo Repository, cache Cache) *AuthService {
 	return &AuthService{
 		hasher: hasher,
 		repo:   repo,
