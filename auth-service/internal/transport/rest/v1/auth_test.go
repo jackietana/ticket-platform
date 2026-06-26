@@ -15,15 +15,16 @@ import (
 )
 
 func TestTransport_signUp(t *testing.T) {
+	t.Parallel()
 	type mockBehavior func(s *mock_service.MockAuthService, user dto.UserRequest)
 
 	testTable := []struct {
-		name                string
-		inputBody           string
-		inputUser           dto.UserRequest
-		mockFn              mockBehavior
-		expectedStatusCode  int
-		expectedRequestBody any
+		name            string
+		inputBody       string
+		inputUser       dto.UserRequest
+		mockFn          mockBehavior
+		wantStatusCode  int
+		wantRequestBody string
 	}{
 		{
 			name:      "OK",
@@ -32,40 +33,40 @@ func TestTransport_signUp(t *testing.T) {
 			mockFn: func(s *mock_service.MockAuthService, user dto.UserRequest) {
 				s.EXPECT().SignUp(gomock.Any(), user).Return("1", nil)
 			},
-			expectedStatusCode:  http.StatusCreated,
-			expectedRequestBody: objToJsonStr(dto.SignUpResponse{ID: "1", Message: "successfully signed up"}),
+			wantStatusCode:  http.StatusCreated,
+			wantRequestBody: objToJsonStr(dto.SignUpResponse{ID: "1", Message: "successfully signed up"}),
 		},
 		{
-			name:                "Empty required field",
-			inputBody:           `{"email": "test@mail.com"}`,
-			inputUser:           dto.UserRequest{Email: "test@mail.com", Password: "test_password"},
-			mockFn:              func(s *mock_service.MockAuthService, user dto.UserRequest) {},
-			expectedStatusCode:  http.StatusBadRequest,
-			expectedRequestBody: objToJsonStr(dto.ErrorResponse{Error: "invalid input body"}),
+			name:            "Empty required field",
+			inputBody:       `{"email": "test@mail.com"}`,
+			inputUser:       dto.UserRequest{Email: "test@mail.com", Password: "test_password"},
+			mockFn:          func(s *mock_service.MockAuthService, user dto.UserRequest) {},
+			wantStatusCode:  http.StatusBadRequest,
+			wantRequestBody: objToJsonStr(dto.ErrorResponse{Error: "invalid input body"}),
 		},
 		{
 			name:      "Service failure",
 			inputBody: `{"email": "test@mail.com","password": "test_password"}`,
 			inputUser: dto.UserRequest{Email: "test@mail.com", Password: "test_password"},
 			mockFn: func(s *mock_service.MockAuthService, user dto.UserRequest) {
-				s.EXPECT().SignUp(gomock.Any(), user).Return("0", errors.New("service failure"))
+				s.EXPECT().SignUp(gomock.Any(), user).Return("", errors.New("service failure"))
 			},
-			expectedStatusCode:  http.StatusInternalServerError,
-			expectedRequestBody: objToJsonStr(dto.ErrorResponse{Error: "service failure"}),
+			wantStatusCode:  http.StatusInternalServerError,
+			wantRequestBody: objToJsonStr(dto.ErrorResponse{Error: "service failure"}),
 		},
 	}
 
 	for _, test := range testTable {
 		t.Run(test.name, func(t *testing.T) {
-			// Init deps
-			controller := gomock.NewController(t)
-			defer controller.Finish()
+			t.Parallel()
 
+			controller := gomock.NewController(t)
 			auth := mock_service.NewMockAuthService(controller)
 			test.mockFn(auth, test.inputUser)
 			handler := NewHandler(auth)
 
 			// Test server
+			gin.SetMode(gin.TestMode)
 			router := gin.New()
 			router.POST("/sign-up", handler.signUp)
 
@@ -76,13 +77,12 @@ func TestTransport_signUp(t *testing.T) {
 			// Perform request
 			router.ServeHTTP(recorder, request)
 
-			// Assert
-			if test.expectedStatusCode != recorder.Code {
-				t.Errorf("invalid status code, expected: %d got: %d", test.expectedStatusCode, recorder.Code)
+			if test.wantStatusCode != recorder.Code {
+				t.Errorf("invalid status code, expected: %d got: %d", test.wantStatusCode, recorder.Code)
 			}
 
-			if test.expectedRequestBody != recorder.Body.String() {
-				t.Errorf("invalid request body, expected: %s got: %s", test.expectedRequestBody, recorder.Body.String())
+			if test.wantRequestBody != recorder.Body.String() {
+				t.Errorf("invalid request body, expected: %s got: %s", test.wantRequestBody, recorder.Body.String())
 			}
 		})
 	}
