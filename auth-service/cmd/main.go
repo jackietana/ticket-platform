@@ -49,7 +49,7 @@ func main() {
 	hasher := hash.NewSHA1Hasher(cfg.Salt)
 	cacheDB := cache.NewRedisConnection("localhost:6379")
 
-	repoDB, err := psql.NewPostgresConnection(cfg.DB)
+	repoDB, err := psql.NewPostgresConnection(cfg)
 	if err != nil {
 		log.Fatalf("error connecting to db: %v", err)
 	}
