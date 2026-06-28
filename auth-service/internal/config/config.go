@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"os"
 )
 
@@ -36,6 +37,11 @@ func NewConfig() (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func (c *Config) GetDatabaseConnString() string {
+	return fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
+		c.DB.Host, c.DB.Port, c.DB.User, c.DB.Name, c.DB.Pass, c.DB.SSLMode)
 }
 
 func (c *Config) validate() error {
