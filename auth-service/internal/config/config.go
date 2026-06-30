@@ -39,6 +39,14 @@ func NewConfig() (*Config, error) {
 	return cfg, nil
 }
 
+func NewTestConfig() *Config {
+	return &Config{
+		DB: Postgres{Host: "localhost", Name: "test_db", User: "test_user",
+			Pass: "test_pass", Port: "5432", SSLMode: "disable"},
+		Salt: "test_salt_0123456789",
+	}
+}
+
 func (c *Config) GetDatabaseConnString() string {
 	return fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
 		c.DB.Host, c.DB.Port, c.DB.User, c.DB.Name, c.DB.Pass, c.DB.SSLMode)
