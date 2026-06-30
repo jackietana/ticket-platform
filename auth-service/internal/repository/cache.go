@@ -66,7 +66,7 @@ func (c *Cache) AddSession(ctx context.Context, session domain.Session) error {
 	}
 
 	if err := c.db.ZAdd(ctx, sessionsKey, redis.Z{
-		Score:  float64(time.Now().Unix()),
+		Score:  float64(time.Now().UnixNano()),
 		Member: session.Token,
 	}).Err(); err != nil {
 		return fmt.Errorf("failed to add session to zset: %w", err)
@@ -110,7 +110,7 @@ func (c *Cache) GetSessionContext(ctx context.Context, token string) (domain.Ses
 
 func (c *Cache) clearExpiredSessions(ctx context.Context, userId string) error {
 	key := fmt.Sprintf(SESSIONS_PLACEHOLDER, userId)
-	expirationTime := time.Now().Add(time.Minute).Add(-SESSION_TTL).Unix()
+	expirationTime := time.Now().Add(time.Minute).Add(-SESSION_TTL).UnixNano()
 
 	return c.db.ZRemRangeByScore(ctx, key, "0", strconv.FormatInt(expirationTime, 10)).Err()
 }
