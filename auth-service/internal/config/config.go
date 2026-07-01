@@ -4,32 +4,56 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	DB   Postgres
-	Salt string
+	Server   ServerConfig   `yaml:"server"`
+	Postgres PostgresConfig `yaml:"postgres"`
+	Redis    RedisConfig    `yaml:"redis"`
+	Salt     string
 }
 
-type Postgres struct {
+type ServerConfig struct {
+	GRPCPort string `yaml:"grpc_port"`
+	RESTPort string `yaml:"rest_port"`
+}
+
+type PostgresConfig struct {
 	Host    string
-	Port    string
+	Port    string `yaml:"port"`
 	Name    string
 	User    string
 	Pass    string
 	SSLMode string
 }
 
-func NewConfig() (*Config, error) {
+type RedisConfig struct {
+	Host string
+	Port string `yaml:"port"`
+	Pass string
+}
+
+func NewConfig(path string) (*Config, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file: %w", err)
+	}
+
 	cfg := &Config{}
+	if err := yaml.Unmarshal(data, cfg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal yaml: %w", err)
+	}
 
-	cfg.DB.Host = os.Getenv("APP_DB_HOST")
-	cfg.DB.Port = os.Getenv("APP_DB_PORT")
-	cfg.DB.Name = os.Getenv("APP_DB_NAME")
-	cfg.DB.User = os.Getenv("APP_DB_USER")
-	cfg.DB.Pass = os.Getenv("APP_DB_PASS")
-	cfg.DB.SSLMode = os.Getenv("APP_DB_SSLMODE")
+	cfg.Postgres.Host = os.Getenv("APP_DB_HOST")
+	cfg.Postgres.Name = os.Getenv("APP_DB_NAME")
+	cfg.Postgres.User = os.Getenv("APP_DB_USER")
+	cfg.Postgres.Pass = os.Getenv("APP_DB_PASS")
+	cfg.Postgres.SSLMode = os.Getenv("APP_DB_SSLMODE")
 
+	cfg.Redis.Host = os.Getenv("APP_REDIS_HOST")
+	cfg.Redis.Pass = os.Getenv("APP_REDIS_PASS")
 	cfg.Salt = os.Getenv("APP_HASH_SALT")
 
 	if err := cfg.validate(); err != nil {
@@ -41,21 +65,26 @@ func NewConfig() (*Config, error) {
 
 func NewTestConfig() *Config {
 	return &Config{
-		DB: Postgres{Host: "localhost", Name: "test_db", User: "test_user",
+		Postgres: PostgresConfig{Host: "localhost", Name: "test_db", User: "test_user",
 			Pass: "test_pass", Port: "5432", SSLMode: "disable"},
-		Salt: "test_salt_0123456789",
+		Redis: RedisConfig{Port: "6379", Pass: "test_pass"},
+		Salt:  "test_salt_0123456789",
 	}
 }
 
 func (c *Config) GetDatabaseConnString() string {
 	return fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
-		c.DB.Host, c.DB.Port, c.DB.User, c.DB.Name, c.DB.Pass, c.DB.SSLMode)
+		c.Postgres.Host, c.Postgres.Port, c.Postgres.User, c.Postgres.Name, c.Postgres.Pass, c.Postgres.SSLMode)
 }
 
 func (c *Config) validate() error {
-	if c.DB.Host == "" || c.DB.Port == "" || c.DB.Name == "" ||
-		c.DB.User == "" || c.DB.Pass == "" || c.DB.SSLMode == "" {
-		return errors.New("missing db configuration")
+	if c.Postgres.Host == "" || c.Postgres.Port == "" || c.Postgres.Name == "" ||
+		c.Postgres.User == "" || c.Postgres.Pass == "" || c.Postgres.SSLMode == "" {
+		return errors.New("missing psql config")
+	}
+
+	if c.Redis.Host == "" || c.Redis.Port == "" || c.Redis.Pass == "" {
+		return errors.New("missing redis config")
 	}
 
 	if c.Salt == "" {
