@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:alpine
+    container_name: auth-postgres
+    environment:
+      POSTGRES_USER: ${APP_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${APP_DB_PASS:-postgres_pass}
+      POSTGRES_DB: ${APP_DB_NAME:-ticket_auth}
+    ports:
+      - "${APP_DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${APP_DB_USER:-postgres} -d ${APP_DB_NAME:-ticket_auth}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ticket-network
+
+  redis:
+    image: redis:alpine
+    container_name: auth-redis
+    command: redis-server --requirepass ${APP_REDIS_PASS:-redis_pass}
+    ports:
+      - "${APP_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ticket-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+    environment:
+      - APP_DB_HOST=${APP_DB_HOST:-postgres}
+      - APP_DB_PORT=5432
+      - APP_DB_USER=${APP_DB_USER:-postgres}
+      - APP_DB_PASS=${APP_DB_PASS:-postgres_pass}
+      - APP_DB_NAME=${APP_DB_NAME:-ticket_auth}
+      - APP_DB_SSLMODE=disable
+      - APP_REDIS_HOST=${APP_REDIS_HOST:-redis}
+      - APP_REDIS_PORT=6379
+      - APP_REDIS_PASS=${APP_REDIS_PASS:-redis_pass}
+      - APP_HASH_SALT=${APP_HASH_SALT:-hash_salt}
+      - APP_MIGRATIONS_PATH=/app/migrations
+      - APP_CONFIG_PATH=/app/configs/main.yml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ticket-network
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  ticket-network:
+    driver: bridge

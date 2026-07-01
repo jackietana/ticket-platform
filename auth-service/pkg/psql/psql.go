@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 
@@ -32,9 +33,12 @@ func NewPostgresConnection(cfg *config.Config) (*sql.DB, error) {
 }
 
 func RunUpMigrations(cfg *config.Config) error {
-	_, b, _, _ := runtime.Caller(0)
-	basePath := filepath.Join(filepath.Dir(b), "../../migrations")
-	migrationDir := filepath.Join("file://" + basePath)
+	migrationsPath := os.Getenv("APP_MIGRATIONS_PATH")
+	if migrationsPath == "" {
+		_, b, _, _ := runtime.Caller(0)
+		migrationsPath = filepath.Join(filepath.Dir(b), "../../migrations")
+	}
+	migrationDir := "file://" + migrationsPath
 
 	db, err := sql.Open("postgres", cfg.GetDatabaseConnString())
 	if err != nil {

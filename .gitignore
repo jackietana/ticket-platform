@@ -1,4 +1,6 @@
 info.txt
 .env
+.env.local
 app.go
 docs
+auth-service/auth-app
