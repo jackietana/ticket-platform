@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -41,13 +42,22 @@ import (
 
 func main() {
 	// REST deps
-	cfg, err := config.NewConfig()
+	configPath := os.Getenv("APP_CONFIG_PATH")
+	if configPath == "" {
+		configPath = "./auth-service/configs/main.yml"
+	}
+
+	cfg, err := config.NewConfig(configPath)
 	if err != nil {
 		log.Fatalf("error creating config: %v", err)
 	}
 
+	if err := psql.RunUpMigrations(cfg); err != nil {
+		log.Fatalf("failed to run migrations: %v", err)
+	}
+
 	hasher := hash.NewSHA1Hasher(cfg.Salt)
-	cacheDB := cache.NewRedisConnection("localhost:6379")
+	cacheDB := cache.NewRedisConnection(fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port), cfg.Redis.Pass)
 
 	repoDB, err := psql.NewPostgresConnection(cfg)
 	if err != nil {
@@ -61,12 +71,12 @@ func main() {
 
 	router := handler.Init()
 	httpSrv := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + cfg.Server.RESTPort,
 		Handler: router,
 	}
 
 	// gRPC deps
-	lis, err := net.Listen("tcp", ":9000")
+	lis, err := net.Listen("tcp", ":"+cfg.Server.GRPCPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -75,14 +85,14 @@ func main() {
 	pb.RegisterAuthServiceServer(grpcServer, grpcsrv.NewAuthServer(authService))
 
 	go func() {
-		log.Println("gRPC server started on port 9000")
+		log.Printf("gRPC server started on port %s", cfg.Server.GRPCPort)
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %v", err)
 		}
 	}()
 
 	go func() {
-		log.Println("REST server started on port 8080")
+		log.Printf("REST server started on port %s", cfg.Server.RESTPort)
 		if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("error starting server: %v", err)
 		}
