@@ -1,3 +1,3 @@
-DROP TABLE events;
+DROP TABLE IF EXISTS events;
 
-DROP TABLE categories;
+DROP TABLE IF EXISTS categories;
