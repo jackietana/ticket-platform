@@ -10,6 +10,7 @@ import (
 	pb "github.com/jackietana/ticket-platform/api/gen/authv1"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/domain"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/dto"
+	"google.golang.org/grpc/metadata"
 )
 
 type CatalogService interface {
@@ -65,17 +66,20 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("client_ip", c.ClientIP())
-		c.Set("user-agent", c.GetHeader("User-Agent"))
+		md := metadata.New(map[string]string{
+			"client-ip": c.ClientIP(),
+			"client-ua": c.GetHeader("User-Agent"),
+		})
 
-		resp, err := h.authClient.ValidateToken(c.Request.Context(), &pb.ValidateTokenRequest{Token: authValues[1]})
+		grpcCtx := metadata.NewOutgoingContext(c.Request.Context(), md)
+		resp, err := h.authClient.ValidateToken(grpcCtx, &pb.ValidateTokenRequest{Token: authValues[1]})
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, dto.ErrorResponse{Error: "token is invalid"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, dto.ErrorResponse{Error: "token is expired"})
 			return
 		}
 
 		if !resp.IsValid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, dto.ErrorResponse{Error: "token is expired"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, dto.ErrorResponse{Error: "token is invalid"})
 			return
 		}
 
