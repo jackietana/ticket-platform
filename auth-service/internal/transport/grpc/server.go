@@ -37,7 +37,7 @@ func (s *AuthServer) ValidateToken(ctx context.Context, req *pb.ValidateTokenReq
 	}
 
 	var userAgent string
-	if data, ok := metaData["user-agent"]; ok && len(data) > 0 {
+	if data, ok := metaData["client-ua"]; ok && len(data) > 0 {
 		userAgent = data[0]
 	}
 
