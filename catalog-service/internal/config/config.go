@@ -19,8 +19,8 @@ type MinioConfig struct {
 	InternalEndpoint string `yaml:"internal_endpoint"`
 	ExternalEndpoint string `yaml:"external_endpoint"`
 	ServerPort       string `yaml:"server_port"`
-	User             string
-	Pass             string
+	User             string `yaml:"minio_user"`
+	Pass             string `yaml:"minio_pass"`
 }
 
 func NewConfig(path string) (*Config, error) {
@@ -30,14 +30,20 @@ func NewConfig(path string) (*Config, error) {
 	}
 
 	cfg := &Config{}
-	cfg.Postgres = pkgConfig.NewPostgresConfig()
 
 	if err := yaml.Unmarshal(data, cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal yaml: %w", err)
 	}
 
+	cfg.Postgres.Host = os.Getenv("APP_DB_HOST")
+	cfg.Postgres.Name = os.Getenv("APP_CATALOG_DB_NAME")
+	cfg.Postgres.User = os.Getenv("APP_DB_USER")
+	cfg.Postgres.Pass = os.Getenv("APP_DB_PASS")
+	cfg.Postgres.SSLMode = os.Getenv("APP_DB_SSLMODE")
+
 	cfg.Minio.User = os.Getenv("APP_MINIO_USER")
 	cfg.Minio.Pass = os.Getenv("APP_MINIO_PASS")
+	cfg.Minio.ServerPort = os.Getenv("APP_MINIO_SRV_PORT")
 
 	if err := cfg.validate(); err != nil {
 		return nil, err
