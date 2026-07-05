@@ -52,7 +52,7 @@ func NewConfig(path string) (*Config, error) {
 
 func NewTestConfig() *Config {
 	return &Config{
-		Postgres: PostgresConfig{Host: "localhost", Name: "test_db", User: "test_user",
+		Postgres: pkgConfig.PostgresConfig{Host: "localhost", Name: "test_db", User: "test_user",
 			Pass: "test_pass", Port: "5432", SSLMode: "disable"},
 		Redis: RedisConfig{Port: "6379", Pass: "test_pass"},
 		Salt:  "test_salt_0123456789",
