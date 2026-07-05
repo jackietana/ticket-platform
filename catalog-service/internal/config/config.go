@@ -16,11 +16,11 @@ type Config struct {
 }
 
 type MinioConfig struct {
-	Host       string
-	ClientPort string `yaml:"client_port"`
-	ServerPort string `yaml:"server_port"`
-	User       string
-	Pass       string
+	InternalEndpoint string `yaml:"internal_endpoint"`
+	ExternalEndpoint string `yaml:"external_endpoint"`
+	ServerPort       string `yaml:"server_port"`
+	User             string
+	Pass             string
 }
 
 func NewConfig(path string) (*Config, error) {
@@ -40,7 +40,6 @@ func NewConfig(path string) (*Config, error) {
 	cfg.Postgres.Pass = os.Getenv("APP_DB_PASS")
 	cfg.Postgres.SSLMode = os.Getenv("APP_DB_SSLMODE")
 
-	cfg.Minio.Host = os.Getenv("APP_MINIO_HOST")
 	cfg.Minio.User = os.Getenv("APP_MINIO_USER")
 	cfg.Minio.Pass = os.Getenv("APP_MINIO_PASS")
 
@@ -66,7 +65,7 @@ func (c *Config) validate() error {
 		return errors.New("missing psql config")
 	}
 
-	if c.Minio.Host == "" || c.Minio.ClientPort == "" || c.Minio.ServerPort == "" ||
+	if c.Minio.InternalEndpoint == "" || c.Minio.ExternalEndpoint == "" || c.Minio.ServerPort == "" ||
 		c.Minio.User == "" || c.Minio.Pass == "" {
 		return errors.New("missing minio config")
 	}
