@@ -5,28 +5,15 @@ import (
 	"fmt"
 	"os"
 
+	pkgConfig "github.com/jackietana/ticket-platform/pkg/config"
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	Postgres PostgresConfig `yaml:"postgres"`
-	Redis    RedisConfig    `yaml:"redis"`
+	Server   pkgConfig.ServerConfig   `yaml:"server"`
+	Postgres pkgConfig.PostgresConfig `yaml:"postgres"`
+	Redis    RedisConfig              `yaml:"redis"`
 	Salt     string
-}
-
-type ServerConfig struct {
-	GRPCPort string `yaml:"grpc_port"`
-	RESTPort string `yaml:"rest_port"`
-}
-
-type PostgresConfig struct {
-	Host    string
-	Port    string `yaml:"port"`
-	Name    string
-	User    string
-	Pass    string
-	SSLMode string
 }
 
 type RedisConfig struct {
