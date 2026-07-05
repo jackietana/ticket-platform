@@ -18,9 +18,8 @@ import (
 	"github.com/jackietana/ticket-platform/catalog-service/internal/service"
 	grpcsrv "github.com/jackietana/ticket-platform/catalog-service/internal/transport/grpc"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/transport/rest/v1"
+	pkgMinio "github.com/jackietana/ticket-platform/catalog-service/pkg/minio"
 	"github.com/jackietana/ticket-platform/pkg/database/psql"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -48,10 +47,7 @@ func main() {
 		log.Fatalf("error connecting to db: %v", err)
 	}
 
-	minioClient, err := minio.New(cfg.Minio.InternalEndpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(cfg.Minio.User, cfg.Minio.Pass, ""),
-		Secure: false,
-	})
+	minio, err := pkgMinio.NewMinioClient(&cfg.Minio)
 	if err != nil {
 		log.Fatalf("failed to connect to minio: %v", err)
 	}
@@ -64,7 +60,7 @@ func main() {
 
 	authClient := authv1.NewAuthServiceClient(conn)
 
-	repository := repository.NewRepository(context.Background(), psqlDB, minioClient, cfg.Minio)
+	repository := repository.NewRepository(context.Background(), psqlDB, minio, cfg.Minio)
 	service := service.NewService(repository, repository)
 	handler := rest.NewHandler(authClient, service)
 
