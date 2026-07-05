@@ -2,7 +2,6 @@ package pkgConfig
 
 import (
 	"fmt"
-	"os"
 )
 
 type ServerConfig struct {
@@ -11,24 +10,12 @@ type ServerConfig struct {
 }
 
 type PostgresConfig struct {
-	Host    string
+	Host    string `yaml:"host"`
 	Port    string `yaml:"port"`
-	Name    string
-	User    string
-	Pass    string
-	SSLMode string
-}
-
-func NewPostgresConfig() PostgresConfig {
-	cfg := PostgresConfig{}
-
-	cfg.Host = os.Getenv("APP_DB_HOST")
-	cfg.Name = os.Getenv("APP_DB_NAME")
-	cfg.User = os.Getenv("APP_DB_USER")
-	cfg.Pass = os.Getenv("APP_DB_PASS")
-	cfg.SSLMode = os.Getenv("APP_DB_SSLMODE")
-
-	return cfg
+	Name    string `yaml:"dbname"`
+	User    string `yaml:"dbuser"`
+	Pass    string `yaml:"dbpass"`
+	SSLMode string `yaml:"sslmode"`
 }
 
 func (c *PostgresConfig) GetDatabaseConnString() string {
