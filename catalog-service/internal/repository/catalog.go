@@ -10,6 +10,7 @@ import (
 	"mime"
 
 	"github.com/google/uuid"
+	"github.com/jackietana/ticket-platform/catalog-service/internal/config"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/domain"
 	"github.com/minio/minio-go/v7"
 )
@@ -25,12 +26,17 @@ const (
 )
 
 type CatalogRepository struct {
-	db *sql.DB
-	fs *minio.Client
+	extEndpoint string
+	db          *sql.DB
+	fs          *minio.Client
 }
 
-func NewRepository(ctx context.Context, psql *sql.DB, minio *minio.Client) *CatalogRepository {
-	return &CatalogRepository{db: psql, fs: minio}
+func NewRepository(ctx context.Context, psql *sql.DB, minio *minio.Client, cfg config.MinioConfig) *CatalogRepository {
+	return &CatalogRepository{
+		extEndpoint: cfg.ExternalEndpoint,
+		db:          psql,
+		fs:          minio,
+	}
 }
 
 func (r *CatalogRepository) InitStorage(ctx context.Context) error {
@@ -111,8 +117,7 @@ func (r *CatalogRepository) UploadPoster(ctx context.Context, file io.Reader, si
 		return "", fmt.Errorf("failed to put object to minio: %w", err)
 	}
 
-	// TODO: use config path instead
-	fileURL := fmt.Sprintf("http://localhost:9000/%s/%s", BUCKET_NAME, objectName)
+	fileURL := fmt.Sprintf("%s/%s/%s", r.extEndpoint, BUCKET_NAME, objectName)
 
 	return fileURL, nil
 }
