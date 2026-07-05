@@ -1,0 +1,10 @@
+server:
+  grpc_port: "9092"
+  rest_port: "8080"
+
+postgres:
+  port: "5432"
+
+minio:
+  client_port: "9000"
+  server_port: "9001"
