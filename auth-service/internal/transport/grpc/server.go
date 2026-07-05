@@ -3,7 +3,7 @@ package grpcsrv
 import (
 	"context"
 
-	pb "github.com/jackietana/ticket-platform/auth-service/internal/transport/grpc/gen"
+	pb "github.com/jackietana/ticket-platform/api/gen/authv1"
 	"github.com/jackietana/ticket-platform/auth-service/internal/transport/rest/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"

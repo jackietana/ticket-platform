@@ -12,11 +12,11 @@ import (
 	"syscall"
 	"time"
 
+	pb "github.com/jackietana/ticket-platform/api/gen/authv1"
 	"github.com/jackietana/ticket-platform/auth-service/internal/config"
 	"github.com/jackietana/ticket-platform/auth-service/internal/repository"
 	"github.com/jackietana/ticket-platform/auth-service/internal/service"
 	grpcsrv "github.com/jackietana/ticket-platform/auth-service/internal/transport/grpc"
-	pb "github.com/jackietana/ticket-platform/auth-service/internal/transport/grpc/gen"
 	"github.com/jackietana/ticket-platform/auth-service/internal/transport/rest/v1"
 	"github.com/jackietana/ticket-platform/auth-service/pkg/cache"
 	"github.com/jackietana/ticket-platform/auth-service/pkg/hash"
