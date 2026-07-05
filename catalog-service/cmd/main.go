@@ -61,6 +61,10 @@ func main() {
 	authClient := authv1.NewAuthServiceClient(conn)
 
 	repository := repository.NewRepository(context.Background(), psqlDB, minio, cfg.Minio)
+	if err := repository.InitStorage(context.Background()); err != nil {
+		log.Fatalf("failed to init minio storage: %v", err)
+	}
+
 	service := service.NewService(repository, repository)
 	handler := rest.NewHandler(authClient, service)
 
