@@ -13,13 +13,13 @@ type Config struct {
 	Server   pkgConfig.ServerConfig   `yaml:"server"`
 	Postgres pkgConfig.PostgresConfig `yaml:"postgres"`
 	Redis    RedisConfig              `yaml:"redis"`
-	Salt     string
+	Salt     string                   `yaml:"hash_salt"`
 }
 
 type RedisConfig struct {
-	Host string
+	Host string `yaml:"host"`
 	Port string `yaml:"port"`
-	Pass string
+	Pass string `yaml:"pass"`
 }
 
 func NewConfig(path string) (*Config, error) {
@@ -29,11 +29,16 @@ func NewConfig(path string) (*Config, error) {
 	}
 
 	cfg := &Config{}
-	cfg.Postgres = pkgConfig.NewPostgresConfig()
 
 	if err := yaml.Unmarshal(data, cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal yaml: %w", err)
 	}
+
+	cfg.Postgres.Host = os.Getenv("APP_DB_HOST")
+	cfg.Postgres.Name = os.Getenv("APP_AUTH_DB_NAME")
+	cfg.Postgres.User = os.Getenv("APP_DB_USER")
+	cfg.Postgres.Pass = os.Getenv("APP_DB_PASS")
+	cfg.Postgres.SSLMode = os.Getenv("APP_DB_SSLMODE")
 
 	cfg.Redis.Host = os.Getenv("APP_REDIS_HOST")
 	cfg.Redis.Pass = os.Getenv("APP_REDIS_PASS")
