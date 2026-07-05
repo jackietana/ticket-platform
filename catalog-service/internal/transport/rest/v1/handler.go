@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	pb "github.com/jackietana/ticket-platform/api/gen/authv1"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/domain"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/dto"
-	pb "github.com/jackietana/ticket-platform/catalog-service/internal/transport/grpc/gen"
 )
 
 type CatalogService interface {

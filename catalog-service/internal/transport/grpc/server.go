@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	pb "github.com/jackietana/ticket-platform/catalog-service/internal/transport/grpc/gen"
+	pb "github.com/jackietana/ticket-platform/api/gen/catalogv1"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/transport/rest/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
