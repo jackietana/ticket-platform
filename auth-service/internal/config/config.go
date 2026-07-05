@@ -29,15 +29,11 @@ func NewConfig(path string) (*Config, error) {
 	}
 
 	cfg := &Config{}
+	cfg.Postgres = pkgConfig.NewPostgresConfig()
+
 	if err := yaml.Unmarshal(data, cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal yaml: %w", err)
 	}
-
-	cfg.Postgres.Host = os.Getenv("APP_DB_HOST")
-	cfg.Postgres.Name = os.Getenv("APP_DB_NAME")
-	cfg.Postgres.User = os.Getenv("APP_DB_USER")
-	cfg.Postgres.Pass = os.Getenv("APP_DB_PASS")
-	cfg.Postgres.SSLMode = os.Getenv("APP_DB_SSLMODE")
 
 	cfg.Redis.Host = os.Getenv("APP_REDIS_HOST")
 	cfg.Redis.Pass = os.Getenv("APP_REDIS_PASS")
@@ -57,11 +53,6 @@ func NewTestConfig() *Config {
 		Redis: RedisConfig{Port: "6379", Pass: "test_pass"},
 		Salt:  "test_salt_0123456789",
 	}
-}
-
-func (c *Config) GetDatabaseConnString() string {
-	return fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
-		c.Postgres.Host, c.Postgres.Port, c.Postgres.User, c.Postgres.Name, c.Postgres.Pass, c.Postgres.SSLMode)
 }
 
 func (c *Config) validate() error {
