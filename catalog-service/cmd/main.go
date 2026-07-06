@@ -30,7 +30,7 @@ func main() {
 	// REST dependencies
 	configPath := os.Getenv("APP_CONFIG_PATH")
 	if configPath == "" {
-		configPath = "./catalog-service/configs/main.yml"
+		configPath = "./catalog-service/configs/local.yaml"
 	}
 
 	cfg, err := config.NewConfig(configPath)
@@ -52,7 +52,7 @@ func main() {
 		log.Fatalf("failed to connect to minio: %v", err)
 	}
 
-	conn, err := grpc.NewClient(":9091", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(cfg.GetAuthServiceEndpoint(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to create gRPC channel: %v", err)
 	}
