@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:alpine
-    container_name: auth-postgres
+    container_name: ticket-postgres
     environment:
       POSTGRES_USER: ${APP_DB_USER:-postgres}
       POSTGRES_PASSWORD: ${APP_DB_PASS:-postgres_pass}
@@ -12,7 +12,7 @@ services:
       - ./initdb/init.sql:/docker-entrypoint-initdb.d/init.sql
       - pgdata:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${APP_DB_USER:-postgres} -d ${APP_DB_NAME:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${APP_DB_USER:-postgres} -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -21,7 +21,7 @@ services:
 
   redis:
     image: redis:alpine
-    container_name: auth-redis
+    container_name: ticket-redis
     command: redis-server --requirepass ${APP_REDIS_PASS:-redis_pass}
     ports:
       - "${APP_REDIS_PORT:-6379}:6379"
@@ -37,7 +37,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: catalog-minio
+    container_name: ticket-minio
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${APP_MINIO_USER:-user}
@@ -61,21 +61,21 @@ services:
       dockerfile: auth-service/Dockerfile
     container_name: auth-service
     ports:
-      - "8080:8080"
+      - "8081:8080"
       - "9091:9091"
     environment:
       - APP_DB_HOST=${APP_DB_HOST:-postgres}
       - APP_DB_PORT=5432
       - APP_DB_USER=${APP_DB_USER:-postgres}
       - APP_DB_PASS=${APP_DB_PASS:-postgres_pass}
-      - APP_DB_NAME=${APP_DB_NAME:-auth_db}
+      - APP_AUTH_DB_NAME=${APP_AUTH_DB_NAME:-auth_db}
       - APP_DB_SSLMODE=disable
       - APP_REDIS_HOST=${APP_REDIS_HOST:-redis}
       - APP_REDIS_PORT=6379
       - APP_REDIS_PASS=${APP_REDIS_PASS:-redis_pass}
       - APP_HASH_SALT=${APP_HASH_SALT:-hash_salt}
       - APP_MIGRATIONS_PATH=/app/migrations
-      - APP_CONFIG_PATH=/app/configs/main.yml
+      - APP_CONFIG_PATH=/app/configs/main.yaml
     depends_on:
       postgres:
         condition: service_healthy
@@ -90,19 +90,19 @@ services:
       dockerfile: catalog-service/Dockerfile
     container_name: catalog-service
     ports:
-      - "8081:8080"
+      - "8082:8080"
       - "9092:9092"
     environment:
       - APP_DB_HOST=${APP_DB_HOST:-postgres}
       - APP_DB_PORT=5432
       - APP_DB_USER=${APP_DB_USER:-postgres}
       - APP_DB_PASS=${APP_DB_PASS:-postgres_pass}
-      - APP_DB_NAME=${APP_DB_NAME:-catalog_db}
+      - APP_CATALOG_DB_NAME=${APP_CATALOG_DB_NAME:-catalog_db}
       - APP_DB_SSLMODE=disable
       - APP_MINIO_USER=${APP_MINIO_USER:-user}
       - APP_MINIO_PASS=${APP_MINIO_PASS:-minio_pass}
       - APP_MIGRATIONS_PATH=/app/migrations
-      - APP_CONFIG_PATH=/app/configs/main.yml
+      - APP_CONFIG_PATH=/app/configs/main.yaml
     depends_on:
       postgres:
         condition: service_healthy

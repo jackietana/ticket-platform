@@ -4,3 +4,4 @@ info.txt
 app.go
 docs
 auth-service/auth-app
+catalog-service/catalog-app
