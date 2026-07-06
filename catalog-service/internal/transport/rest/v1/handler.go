@@ -74,7 +74,7 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 		grpcCtx := metadata.NewOutgoingContext(c.Request.Context(), md)
 		resp, err := h.authClient.ValidateToken(grpcCtx, &pb.ValidateTokenRequest{Token: authValues[1]})
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, dto.ErrorResponse{Error: "token is expired"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, dto.ErrorResponse{Error: "token is expired or invalid"})
 			return
 		}
 
