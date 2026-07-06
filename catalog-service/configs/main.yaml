@@ -1,6 +1,6 @@
 server:
   grpc_port: "9092"
-  rest_port: "8081"
+  rest_port: "8080"
 
 postgres:
   port: "5432"
@@ -8,5 +8,9 @@ postgres:
 minio:
   client_port: "9000"
   server_port: "9001"
-  internal_endpoint: "localhost:9000"
+  internal_endpoint: "minio:9000"
   external_endpoint: "http://localhost:9000"
+
+auth-service:
+  host: "auth-service"
+  port: "9091"

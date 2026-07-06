@@ -10,9 +10,10 @@ import (
 )
 
 type Config struct {
-	Server   pkgConfig.ServerConfig   `yaml:"server"`
-	Postgres pkgConfig.PostgresConfig `yaml:"postgres"`
-	Minio    MinioConfig              `yaml:"minio"`
+	Server      pkgConfig.ServerConfig   `yaml:"server"`
+	Postgres    pkgConfig.PostgresConfig `yaml:"postgres"`
+	Minio       MinioConfig              `yaml:"minio"`
+	AuthService AuthServiceConfig        `yaml:"auth-service"`
 }
 
 type MinioConfig struct {
@@ -21,6 +22,11 @@ type MinioConfig struct {
 	ServerPort       string `yaml:"server_port"`
 	User             string `yaml:"minio_user"`
 	Pass             string `yaml:"minio_pass"`
+}
+
+type AuthServiceConfig struct {
+	Host string `yaml:"host"`
+	Port string `yaml:"port"`
 }
 
 func NewConfig(path string) (*Config, error) {
@@ -43,13 +49,16 @@ func NewConfig(path string) (*Config, error) {
 
 	cfg.Minio.User = os.Getenv("APP_MINIO_USER")
 	cfg.Minio.Pass = os.Getenv("APP_MINIO_PASS")
-	cfg.Minio.ServerPort = os.Getenv("APP_MINIO_SRV_PORT")
 
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
 
 	return cfg, nil
+}
+
+func (c *Config) GetAuthServiceEndpoint() string {
+	return fmt.Sprintf("%s:%s", c.AuthService.Host, c.AuthService.Port)
 }
 
 func (c *Config) validate() error {
@@ -65,6 +74,10 @@ func (c *Config) validate() error {
 	if c.Minio.InternalEndpoint == "" || c.Minio.ExternalEndpoint == "" || c.Minio.ServerPort == "" ||
 		c.Minio.User == "" || c.Minio.Pass == "" {
 		return errors.New("missing minio config")
+	}
+
+	if c.AuthService.Host == "" || c.AuthService.Port == "" {
+		return errors.New("missing auth-service config")
 	}
 
 	return nil
