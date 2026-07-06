@@ -44,7 +44,7 @@ func main() {
 	// REST deps
 	configPath := os.Getenv("APP_CONFIG_PATH")
 	if configPath == "" {
-		configPath = "./auth-service/configs/main.yml"
+		configPath = "./auth-service/configs/local.yaml"
 	}
 
 	cfg, err := config.NewConfig(configPath)
@@ -75,6 +75,13 @@ func main() {
 		Handler: router,
 	}
 
+	go func() {
+		log.Printf("REST server started on port %s", cfg.Server.RESTPort)
+		if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("error starting server: %v", err)
+		}
+	}()
+
 	// gRPC deps
 	lis, err := net.Listen("tcp", ":"+cfg.Server.GRPCPort)
 	if err != nil {
@@ -88,13 +95,6 @@ func main() {
 		log.Printf("gRPC server started on port %s", cfg.Server.GRPCPort)
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %v", err)
-		}
-	}()
-
-	go func() {
-		log.Printf("REST server started on port %s", cfg.Server.RESTPort)
-		if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("error starting server: %v", err)
 		}
 	}()
 
