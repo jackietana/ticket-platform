@@ -14,6 +14,7 @@ The project is built using the Go language and employs the microservices pattern
 *   **Databases:**
     *   PostgreSQL 18+ (For transactional data storage, using `golang-migrate`).
     *   Redis 8+ (For caching sessions, rate limiting, and message queues).
+    **Object Storage:** Minio (For storing posters and media files).
 *   **Infrastructure:** Docker, Docker Compose (for full containerization).
 
 ### Implemented Services
@@ -21,6 +22,10 @@ The project is built using the Go language and employs the microservices pattern
     *   Handles the entire user lifecycle: registration, login, and profile management.
     *   **Security:** Implements mechanisms to prevent session hijacking by binding sessions to the user's IP address and User-Agent.
     *   **Reliability:** Features automatic database migration execution upon startup.
+2.  **`catalog-service` (Catalog Service):**
+    *   Manages the event inventory, including category management and detailed event listings.
+    *   **Media Support:** Handles poster uploads and integration with object storage for media files.
+    *   **Core Features:** Supports creation of events with specific pricing, date scheduling, and capacity tracking.
 
 ***
 
@@ -32,13 +37,14 @@ Depending on your goal (local development or production simulation), choose the 
 This mode is ideal for quick debugging and testing, as services are run directly on the host machine.
 
 1.  **Environment Setup:** Create a `.env.local` file in the project root using the provided template, setting `localhost` for DB hosts.
-2.  **Infrastructure Spin-up:** Start PostgreSQL and Redis in detached mode:
+2.  **Infrastructure Spin-up:** Start PostgreSQL, Redis and MinIO in detached mode:
     ```bash
     docker compose up -d
     ```
-3.  **Service Launch:** Run the `auth-service` directly on the host:
+3.  **Service Launch:** Run the `auth-service` and `catalog-service` directly on the host:
     ```bash
     source .env.local && go run auth-service/cmd/main.go
+    source .env.local && go run catalog-service/cmd/main.go
     ```
 
 ### 2. For Production-style Testing (Containerized)
@@ -47,6 +53,7 @@ Recommended for testing the full interaction flow of all components within an is
 1.  **Compilation:** Compile the binary file for the target container architecture:
     ```bash
     CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./auth-service/auth-app ./auth-service/cmd/main.go
+    CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./catalog-service/catalog-app ./catalog-service/cmd/main.go
     ```
 2.  **Build and Run:** Execute the full build and startup:
     ```bash
@@ -61,9 +68,9 @@ The planned development phases focus on maximizing modularity and decoupling ser
 ### Completed Modules
 *   [x] Base Infrastructure (Docker Compose, Postgres, Redis).
 *   [x] `auth-service`: Fully functional authentication system with session protection.
+*   [x] **Media Storage**: Integration of an object storage system (Minio) for storing posters and media files.
+*   [x] `catalog-service`: Implementation of the core service for managing events, categories, and ticket inventory.
 
 ### Next Steps
-*   [ ] **`catalog-service`**: Implementation of the core service for managing events, categories, and ticket inventory.
-*   [ ] **Asynchronous Communication**: Integration of a message broker (RabbitMQ / Kafka) for service decoupling.
+*   [ ] **Asynchronous Communication**: Integration of a message broker (RabbitMQ) for service decoupling.
 *   [ ] **Transactions & Payments**: Development of `order-service` (order management) and `payment-service` (mock payment gateway integration).
-*   [ ] **Media Storage**: Integration of an object storage system (Minio / S3) for storing posters and media files.
