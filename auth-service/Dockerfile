@@ -3,9 +3,9 @@ FROM alpine:3.19
 WORKDIR /app
 
 COPY auth-service/auth-app .
-COPY auth-service/migrations ./migrations
-COPY auth-service/configs/main.yml ./configs/main.yml
+COPY ../initdb/migrations/auth ./migrations
+COPY auth-service/configs/main.yaml ./configs/main.yaml
 
-EXPOSE 8080 9091
+EXPOSE 8081 9091
 
 CMD ["./auth-app"]
