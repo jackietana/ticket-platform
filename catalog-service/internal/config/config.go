@@ -12,16 +12,8 @@ import (
 type Config struct {
 	Server      pkgConfig.ServerConfig   `yaml:"server"`
 	Postgres    pkgConfig.PostgresConfig `yaml:"postgres"`
-	Minio       MinioConfig              `yaml:"minio"`
+	Minio       pkgConfig.MinioConfig    `yaml:"minio"`
 	AuthService AuthServiceConfig        `yaml:"auth-service"`
-}
-
-type MinioConfig struct {
-	InternalEndpoint string `yaml:"internal_endpoint"`
-	ExternalEndpoint string `yaml:"external_endpoint"`
-	ServerPort       string `yaml:"server_port"`
-	User             string `yaml:"minio_user"`
-	Pass             string `yaml:"minio_pass"`
 }
 
 type AuthServiceConfig struct {
