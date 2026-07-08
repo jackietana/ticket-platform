@@ -18,8 +18,8 @@ import (
 	"github.com/jackietana/ticket-platform/auth-service/internal/service"
 	grpcsrv "github.com/jackietana/ticket-platform/auth-service/internal/transport/grpc"
 	"github.com/jackietana/ticket-platform/auth-service/internal/transport/rest/v1"
-	"github.com/jackietana/ticket-platform/auth-service/pkg/cache"
 	"github.com/jackietana/ticket-platform/auth-service/pkg/hash"
+	"github.com/jackietana/ticket-platform/pkg/cache"
 	"github.com/jackietana/ticket-platform/pkg/database/psql"
 	"google.golang.org/grpc"
 )
