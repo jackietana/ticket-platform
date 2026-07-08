@@ -18,6 +18,14 @@ type PostgresConfig struct {
 	SSLMode string `yaml:"sslmode"`
 }
 
+type MinioConfig struct {
+	InternalEndpoint string `yaml:"internal_endpoint"`
+	ExternalEndpoint string `yaml:"external_endpoint"`
+	ServerPort       string `yaml:"server_port"`
+	User             string `yaml:"minio_user"`
+	Pass             string `yaml:"minio_pass"`
+}
+
 func (c *PostgresConfig) GetDatabaseConnString() string {
 	return fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
 		c.Host, c.Port, c.User, c.Name, c.Pass, c.SSLMode)
