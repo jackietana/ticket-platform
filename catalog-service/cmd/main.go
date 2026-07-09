@@ -18,7 +18,7 @@ import (
 	"github.com/jackietana/ticket-platform/catalog-service/internal/service"
 	grpcsrv "github.com/jackietana/ticket-platform/catalog-service/internal/transport/grpc"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/transport/rest/v1"
-	"github.com/jackietana/ticket-platform/pkg/database/psql"
+	pkgPsql "github.com/jackietana/ticket-platform/pkg/database/psql"
 	pkgMinio "github.com/jackietana/ticket-platform/pkg/minio"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -38,11 +38,11 @@ func main() {
 		log.Fatalf("error creating config: %v", err)
 	}
 
-	if err := psql.RunUpMigrations(&cfg.Postgres, "catalog"); err != nil {
+	if err := pkgPsql.RunUpMigrations(&cfg.Postgres, "catalog"); err != nil {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
 
-	psqlDB, err := psql.NewPostgresConnection(&cfg.Postgres)
+	psqlDB, err := pkgPsql.NewPostgresConnection(&cfg.Postgres)
 	if err != nil {
 		log.Fatalf("error connecting to db: %v", err)
 	}
