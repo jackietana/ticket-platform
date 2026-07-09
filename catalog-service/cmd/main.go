@@ -18,7 +18,7 @@ import (
 	"github.com/jackietana/ticket-platform/catalog-service/internal/service"
 	grpcsrv "github.com/jackietana/ticket-platform/catalog-service/internal/transport/grpc"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/transport/rest/v1"
-	pkgPsql "github.com/jackietana/ticket-platform/pkg/database/psql"
+	pkgPsql "github.com/jackietana/ticket-platform/pkg/database"
 	pkgMinio "github.com/jackietana/ticket-platform/pkg/minio"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

@@ -20,7 +20,7 @@ import (
 	"github.com/jackietana/ticket-platform/auth-service/internal/transport/rest/v1"
 	"github.com/jackietana/ticket-platform/auth-service/pkg/hash"
 	pkgCache "github.com/jackietana/ticket-platform/pkg/cache"
-	pkgPsql "github.com/jackietana/ticket-platform/pkg/database/psql"
+	pkgPsql "github.com/jackietana/ticket-platform/pkg/database"
 	"google.golang.org/grpc"
 )
 
