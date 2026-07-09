@@ -19,8 +19,8 @@ import (
 	grpcsrv "github.com/jackietana/ticket-platform/auth-service/internal/transport/grpc"
 	"github.com/jackietana/ticket-platform/auth-service/internal/transport/rest/v1"
 	"github.com/jackietana/ticket-platform/auth-service/pkg/hash"
-	"github.com/jackietana/ticket-platform/pkg/cache"
-	"github.com/jackietana/ticket-platform/pkg/database/psql"
+	pkgCache "github.com/jackietana/ticket-platform/pkg/cache"
+	pkgPsql "github.com/jackietana/ticket-platform/pkg/database/psql"
 	"google.golang.org/grpc"
 )
 
@@ -52,14 +52,14 @@ func main() {
 		log.Fatalf("error creating config: %v", err)
 	}
 
-	if err := psql.RunUpMigrations(&cfg.Postgres, "auth"); err != nil {
+	if err := pkgPsql.RunUpMigrations(&cfg.Postgres, "auth"); err != nil {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
 
 	hasher := hash.NewSHA1Hasher(cfg.Salt)
-	cacheDB := cache.NewRedisConnection(fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port), cfg.Redis.Pass)
+	cacheDB := pkgCache.NewRedisConnection(fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port), cfg.Redis.Pass)
 
-	repoDB, err := psql.NewPostgresConnection(&cfg.Postgres)
+	repoDB, err := pkgPsql.NewPostgresConnection(&cfg.Postgres)
 	if err != nil {
 		log.Fatalf("error connecting to db: %v", err)
 	}
