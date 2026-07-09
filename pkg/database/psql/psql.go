@@ -1,4 +1,4 @@
-package psql
+package pkgPsql
 
 import (
 	"database/sql"

@@ -1,4 +1,4 @@
-package cache
+package pkgCache
 
 import "github.com/redis/go-redis/v9"
 
