@@ -97,13 +97,13 @@ func main() {
 
 	go func() {
 		log.Printf("gRPC server started on port %s", cfg.Server.GRPCPort)
-		if err := grpcServer.Serve(lis); err != nil {
+		if err := grpcServer.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 			log.Fatalf("failed to serve: %v", err)
 		}
 	}()
 
 	// RabbitMQ dependencies
-	rabbitmqCtx := context.Background()
+	rabbitmqCtx, rabbitmqCancel := context.WithCancel(context.Background())
 
 	minioClient, err := pkgminio.NewMinioClient(&cfg.Minio)
 	if err != nil {
@@ -131,8 +131,6 @@ func main() {
 	<-quit
 	log.Println("received stop signal, closing services...")
 
-	rabbitmqCtx.Done()
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -141,5 +139,7 @@ func main() {
 	}
 
 	grpcServer.GracefulStop()
+
+	rabbitmqCancel()
 	log.Println("services successfully stoped")
 }
