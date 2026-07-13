@@ -1,4 +1,4 @@
-package pkgClient
+package pkgclient
 
 import (
 	"fmt"

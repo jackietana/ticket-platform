@@ -1,4 +1,4 @@
-package pkgConfig
+package pkgconfig
 
 import (
 	"fmt"
@@ -18,6 +18,12 @@ type PostgresConfig struct {
 	SSLMode string `yaml:"sslmode"`
 }
 
+type RedisConfig struct {
+	Host string `yaml:"host"`
+	Port string `yaml:"port"`
+	Pass string `yaml:"pass"`
+}
+
 type MinioConfig struct {
 	InternalEndpoint string `yaml:"internal_endpoint"`
 	ExternalEndpoint string `yaml:"external_endpoint"`
@@ -26,7 +32,16 @@ type MinioConfig struct {
 	Pass             string `yaml:"minio_pass"`
 }
 
+type AuthServiceConfig struct {
+	Host string `yaml:"host"`
+	Port string `yaml:"port"`
+}
+
 func (c *PostgresConfig) GetDatabaseConnString() string {
 	return fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
 		c.Host, c.Port, c.User, c.Name, c.Pass, c.SSLMode)
+}
+
+func (c *AuthServiceConfig) GetAuthServiceEndpoint() string {
+	return fmt.Sprintf("%s:%s", c.Host, c.Port)
 }

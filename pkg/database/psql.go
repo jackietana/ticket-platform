@@ -1,4 +1,4 @@
-package pkgPsql
+package pkgpsql
 
 import (
 	"database/sql"
@@ -11,7 +11,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	pkgConfig "github.com/jackietana/ticket-platform/pkg/config"
+	pkgconfig "github.com/jackietana/ticket-platform/pkg/config"
 	_ "github.com/lib/pq"
 )
 
@@ -19,7 +19,7 @@ var (
 	ErrNoNewMigrations = errors.New("no change")
 )
 
-func NewPostgresConnection(cfg *pkgConfig.PostgresConfig) (*sql.DB, error) {
+func NewPostgresConnection(cfg *pkgconfig.PostgresConfig) (*sql.DB, error) {
 	db, err := sql.Open("postgres", cfg.GetDatabaseConnString())
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func NewPostgresConnection(cfg *pkgConfig.PostgresConfig) (*sql.DB, error) {
 	return db, nil
 }
 
-func RunUpMigrations(cfg *pkgConfig.PostgresConfig, service string) error {
+func RunUpMigrations(cfg *pkgconfig.PostgresConfig, service string) error {
 	migrationsPath := os.Getenv("APP_MIGRATIONS_PATH")
 	if migrationsPath == "" {
 		_, b, _, _ := runtime.Caller(0)
