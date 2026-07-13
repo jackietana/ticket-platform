@@ -1,0 +1,27 @@
+server:
+  grpc_port: "9093"
+  rest_port: "8083"
+
+postgres:
+  port: "5432"
+
+redis:
+  port: "6379"
+
+minio:
+  client_port: "9000"
+  server_port: "9001"
+  internal_endpoint: "localhost:9000"
+  external_endpoint: "http://localhost:9000"
+
+auth-service:
+  host: "localhost"
+  port: "9091"
+
+catalog-service:
+  host: "localhost"
+  port: "9092"
+
+rabbitmq:
+  host: "localhost"
+  port: "5672"
