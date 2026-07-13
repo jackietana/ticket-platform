@@ -5,20 +5,15 @@ import (
 	"fmt"
 	"os"
 
-	pkgConfig "github.com/jackietana/ticket-platform/pkg/config"
+	pkgconfig "github.com/jackietana/ticket-platform/pkg/config"
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	Server      pkgConfig.ServerConfig   `yaml:"server"`
-	Postgres    pkgConfig.PostgresConfig `yaml:"postgres"`
-	Minio       pkgConfig.MinioConfig    `yaml:"minio"`
-	AuthService AuthServiceConfig        `yaml:"auth-service"`
-}
-
-type AuthServiceConfig struct {
-	Host string `yaml:"host"`
-	Port string `yaml:"port"`
+	Server      pkgconfig.ServerConfig      `yaml:"server"`
+	Postgres    pkgconfig.PostgresConfig    `yaml:"postgres"`
+	Minio       pkgconfig.MinioConfig       `yaml:"minio"`
+	AuthService pkgconfig.AuthServiceConfig `yaml:"auth-service"`
 }
 
 func NewConfig(path string) (*Config, error) {
@@ -47,10 +42,6 @@ func NewConfig(path string) (*Config, error) {
 	}
 
 	return cfg, nil
-}
-
-func (c *Config) GetAuthServiceEndpoint() string {
-	return fmt.Sprintf("%s:%s", c.AuthService.Host, c.AuthService.Port)
 }
 
 func (c *Config) validate() error {
