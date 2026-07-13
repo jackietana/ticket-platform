@@ -11,17 +11,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jackietana/ticket-platform/api/gen/authv1"
 	pb "github.com/jackietana/ticket-platform/api/gen/catalogv1"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/config"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/repository"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/service"
 	grpcsrv "github.com/jackietana/ticket-platform/catalog-service/internal/transport/grpc"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/transport/rest/v1"
-	pkgPsql "github.com/jackietana/ticket-platform/pkg/database"
-	pkgMinio "github.com/jackietana/ticket-platform/pkg/minio"
+	pkgpsql "github.com/jackietana/ticket-platform/pkg/database"
+	pkgclient "github.com/jackietana/ticket-platform/pkg/grpc"
+	pkgminio "github.com/jackietana/ticket-platform/pkg/minio"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 const MAX_HEADER_SIZE = 5 * 1 << 20
@@ -38,27 +37,24 @@ func main() {
 		log.Fatalf("error creating config: %v", err)
 	}
 
-	if err := pkgPsql.RunUpMigrations(&cfg.Postgres, "catalog"); err != nil {
+	if err := pkgpsql.RunUpMigrations(&cfg.Postgres, "catalog"); err != nil {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
 
-	psqlDB, err := pkgPsql.NewPostgresConnection(&cfg.Postgres)
+	psqlDB, err := pkgpsql.NewPostgresConnection(&cfg.Postgres)
 	if err != nil {
 		log.Fatalf("error connecting to db: %v", err)
 	}
 
-	minio, err := pkgMinio.NewMinioClient(&cfg.Minio)
+	minio, err := pkgminio.NewMinioClient(&cfg.Minio)
 	if err != nil {
 		log.Fatalf("failed to connect to minio: %v", err)
 	}
 
-	conn, err := grpc.NewClient(cfg.GetAuthServiceEndpoint(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	authClient, err := pkgclient.NewAuthClient(cfg.AuthService.GetAuthServiceEndpoint())
 	if err != nil {
-		log.Fatalf("failed to create gRPC channel: %v", err)
+		log.Fatalf("failed to create auth client: %v", err)
 	}
-	defer conn.Close()
-
-	authClient := authv1.NewAuthServiceClient(conn)
 
 	repository := repository.NewRepository(context.Background(), psqlDB, minio, cfg.Minio)
 	if err := repository.InitStorage(context.Background()); err != nil {
