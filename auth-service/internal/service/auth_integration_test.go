@@ -12,9 +12,9 @@ import (
 	"github.com/jackietana/ticket-platform/auth-service/internal/domain"
 	"github.com/jackietana/ticket-platform/auth-service/internal/dto"
 	"github.com/jackietana/ticket-platform/auth-service/internal/repository"
-	"github.com/jackietana/ticket-platform/auth-service/pkg/cache"
 	"github.com/jackietana/ticket-platform/auth-service/pkg/hash"
-	"github.com/jackietana/ticket-platform/auth-service/pkg/psql"
+	pkgcache "github.com/jackietana/ticket-platform/pkg/cache"
+	pkgpsql "github.com/jackietana/ticket-platform/pkg/database"
 	"github.com/redis/go-redis/v9"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -28,9 +28,9 @@ func TestIntegration_HappyPath(t *testing.T) {
 	// add postgres and redis containers
 	psqlContainer, err := postgres.Run(ctx,
 		"postgres:alpine",
-		postgres.WithDatabase(cfg.DB.Name),
-		postgres.WithUsername(cfg.DB.User),
-		postgres.WithPassword(cfg.DB.Pass),
+		postgres.WithDatabase(cfg.Postgres.Name),
+		postgres.WithUsername(cfg.Postgres.User),
+		postgres.WithPassword(cfg.Postgres.Pass),
 		postgres.BasicWaitStrategies(),
 	)
 	if err != nil {
@@ -43,12 +43,12 @@ func TestIntegration_HappyPath(t *testing.T) {
 		}
 	})
 
-	psqlPort, err := psqlContainer.MappedPort(ctx, cfg.DB.Port)
+	psqlPort, err := psqlContainer.MappedPort(ctx, cfg.Postgres.Port)
 	if err != nil {
 		t.Errorf("failed to get psql port: %v", err)
 	}
 
-	cfg.DB.Port = psqlPort.Port()
+	cfg.Postgres.Port = psqlPort.Port()
 
 	redisContainer, err := tcredis.Run(ctx, "redis:alpine")
 	if err != nil {
@@ -61,25 +61,20 @@ func TestIntegration_HappyPath(t *testing.T) {
 		}
 	})
 
-	endpoint, err := redisContainer.Endpoint(ctx, "")
-	if err != nil {
-		t.Errorf("failed to get redis endpoint: %v", err)
-	}
-
 	// init dependencies
-	psqlDB, err := psql.NewPostgresConnection(cfg)
+	psqlDB, err := pkgpsql.NewPostgresConnection(&cfg.Postgres)
 	if err != nil {
 		t.Fatalf("failed to connect to db: %v", err)
 	}
 
-	redisDB := cache.NewRedisConnection(endpoint)
+	redisDB := pkgcache.NewRedisConnection(fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port), cfg.Redis.Pass)
 
 	authHash := hash.NewSHA1Hasher(cfg.Salt)
 	authRepo := repository.NewRepository(psqlDB)
 	authCache := repository.NewCache(redisDB)
 	authService := NewAuthService(authHash, authRepo, authCache)
 
-	if err := psql.RunUpMigrations(cfg); err != nil {
+	if err := pkgpsql.RunUpMigrations(&cfg.Postgres, "auth"); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)
 	}
 
@@ -94,7 +89,7 @@ func TestIntegration_HappyPath(t *testing.T) {
 		}
 
 		// get saved user from db
-		db, err := sql.Open("postgres", cfg.GetDatabaseConnString())
+		db, err := sql.Open("postgres", cfg.Postgres.GetDatabaseConnString())
 		if err != nil {
 			t.Errorf("failed to connect to db: %v", err)
 		}
