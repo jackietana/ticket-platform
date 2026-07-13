@@ -93,7 +93,7 @@ func main() {
 
 	go func() {
 		log.Printf("gRPC server started on port %s", cfg.Server.GRPCPort)
-		if err := grpcServer.Serve(lis); err != nil {
+		if err := grpcServer.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 			log.Fatalf("failed to serve: %v", err)
 		}
 	}()
