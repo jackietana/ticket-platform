@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackietana/ticket-platform/catalog-service/internal/domain"
-	pkgConfig "github.com/jackietana/ticket-platform/pkg/config"
+	pkgconfig "github.com/jackietana/ticket-platform/pkg/config"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -31,7 +31,7 @@ type CatalogRepository struct {
 	fs          *minio.Client
 }
 
-func NewRepository(ctx context.Context, psql *sql.DB, minio *minio.Client, cfg pkgConfig.MinioConfig) *CatalogRepository {
+func NewRepository(ctx context.Context, psql *sql.DB, minio *minio.Client, cfg pkgconfig.MinioConfig) *CatalogRepository {
 	return &CatalogRepository{
 		extEndpoint: cfg.ExternalEndpoint,
 		db:          psql,
