@@ -5,21 +5,15 @@ import (
 	"fmt"
 	"os"
 
-	pkgConfig "github.com/jackietana/ticket-platform/pkg/config"
+	pkgconfig "github.com/jackietana/ticket-platform/pkg/config"
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	Server   pkgConfig.ServerConfig   `yaml:"server"`
-	Postgres pkgConfig.PostgresConfig `yaml:"postgres"`
-	Redis    RedisConfig              `yaml:"redis"`
+	Server   pkgconfig.ServerConfig   `yaml:"server"`
+	Postgres pkgconfig.PostgresConfig `yaml:"postgres"`
+	Redis    pkgconfig.RedisConfig    `yaml:"redis"`
 	Salt     string                   `yaml:"hash_salt"`
-}
-
-type RedisConfig struct {
-	Host string `yaml:"host"`
-	Port string `yaml:"port"`
-	Pass string `yaml:"pass"`
 }
 
 func NewConfig(path string) (*Config, error) {
@@ -53,9 +47,9 @@ func NewConfig(path string) (*Config, error) {
 
 func NewTestConfig() *Config {
 	return &Config{
-		Postgres: pkgConfig.PostgresConfig{Host: "localhost", Name: "test_db", User: "test_user",
+		Postgres: pkgconfig.PostgresConfig{Host: "localhost", Name: "test_db", User: "test_user",
 			Pass: "test_pass", Port: "5432", SSLMode: "disable"},
-		Redis: RedisConfig{Port: "6379", Pass: "test_pass"},
+		Redis: pkgconfig.RedisConfig{Port: "6379", Pass: "test_pass"},
 		Salt:  "test_salt_0123456789",
 	}
 }
