@@ -15,7 +15,7 @@ The project is built using the Go language and employs the microservices pattern
 *   **Databases:**
     *   PostgreSQL 18+ (For transactional data storage, using `golang-migrate`).
     *   Redis 8+ (For caching sessions, rate limiting, and temporary seat/slot booking with TTL).
-    **Object Storage:** Minio (For storing posters, media files, and generated tickets in json format).
+*   **Object Storage:** Minio (For storing posters, media files, and generated tickets in json format).
 *   **Infrastructure:** Docker, Docker Compose (for full containerization).
 
 ### Implemented Services
