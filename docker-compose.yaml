@@ -55,6 +55,24 @@ services:
     networks:
       - ticket-network
 
+  rabbitmq:
+    image: rabbitmq:alpine
+    container_name: ticket-rabbitmq
+    ports:
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${APP_RABBITMQ_USER:-mq_user}
+      RABBITMQ_DEFAULT_PASS: ${APP_RABBITMQ_PASS:-mq_pass}
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ticket-network
+
   auth-service:
     build:
       context: .
@@ -111,10 +129,47 @@ services:
     networks:
       - ticket-network
 
+  order-service:
+    build:
+      context: .
+      dockerfile: order-service/Dockerfile
+    container_name: order-service
+    ports:
+      - "8083:8080"
+      - "9093:9093"
+    environment:
+      - APP_DB_HOST=${APP_DB_HOST:-postgres}
+      - APP_DB_PORT=5432
+      - APP_DB_USER=${APP_DB_USER:-postgres}
+      - APP_DB_PASS=${APP_DB_PASS:-postgres_pass}
+      - APP_AUTH_DB_NAME=${APP_ORDER_DB_NAME:-order_db}
+      - APP_DB_SSLMODE=disable
+      - APP_REDIS_HOST=${APP_REDIS_HOST:-redis}
+      - APP_REDIS_PORT=6379
+      - APP_REDIS_PASS=${APP_REDIS_PASS:-redis_pass}
+      - APP_MINIO_USER=${APP_MINIO_USER:-user}
+      - APP_MINIO_PASS=${APP_MINIO_PASS:-minio_pass}
+      - APP_RABBITMQ_USER=${APP_RABBITMQ_USER:-guest}
+      - APP_RABBITMQ_PASS=${APP_RABBITMQ_PASS:-guest}
+      - APP_MIGRATIONS_PATH=/app/migrations
+      - APP_CONFIG_PATH=/app/configs/main.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ticket-network
+
 volumes:
   pgdata:
   redisdata:
   miniodata:
+  rabbitdata:
 
 networks:
   ticket-network:
