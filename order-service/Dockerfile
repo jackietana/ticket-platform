@@ -1,0 +1,11 @@
+FROM alpine:3.19
+
+WORKDIR /app
+
+COPY order-service/order-app .
+COPY ../initdb/migrations/order ./migrations
+COPY order-service/configs/main.yaml ./configs/main.yaml
+
+EXPOSE 8083 9093
+
+CMD ["./order-app"]
