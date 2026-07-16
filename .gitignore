@@ -5,3 +5,4 @@ app.go
 docs
 auth-service/auth-app
 catalog-service/catalog-app
+order-service/order-app

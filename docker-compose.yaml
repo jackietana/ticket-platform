@@ -142,7 +142,7 @@ services:
       - APP_DB_PORT=5432
       - APP_DB_USER=${APP_DB_USER:-postgres}
       - APP_DB_PASS=${APP_DB_PASS:-postgres_pass}
-      - APP_AUTH_DB_NAME=${APP_ORDER_DB_NAME:-order_db}
+      - APP_ORDER_DB_NAME=${APP_ORDER_DB_NAME:-order_db}
       - APP_DB_SSLMODE=disable
       - APP_REDIS_HOST=${APP_REDIS_HOST:-redis}
       - APP_REDIS_PORT=6379
