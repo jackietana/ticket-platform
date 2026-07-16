@@ -31,7 +31,7 @@ type RabbitmqConfig struct {
 	Pass string `yaml:"pass"`
 }
 
-func NewConfig(path string) (*Config, error) {
+func NewApiConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
@@ -43,14 +43,34 @@ func NewConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal yaml: %w", err)
 	}
 
-	cfg.Postgres.Host = os.Getenv("APP_DB_HOST")
 	cfg.Postgres.Name = os.Getenv("APP_ORDER_DB_NAME")
 	cfg.Postgres.User = os.Getenv("APP_DB_USER")
 	cfg.Postgres.Pass = os.Getenv("APP_DB_PASS")
 	cfg.Postgres.SSLMode = os.Getenv("APP_DB_SSLMODE")
 
-	cfg.Redis.Host = os.Getenv("APP_REDIS_HOST")
 	cfg.Redis.Pass = os.Getenv("APP_REDIS_PASS")
+
+	cfg.Rabbitmq.User = os.Getenv("APP_RABBITMQ_USER")
+	cfg.Rabbitmq.Pass = os.Getenv("APP_RABBITMQ_PASS")
+
+	if err := cfg.validateApi(); err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+func NewWorkerConfig(path string) (*Config, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file: %w", err)
+	}
+
+	cfg := &Config{}
+
+	if err := yaml.Unmarshal(data, cfg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal yaml: %w", err)
+	}
 
 	cfg.Minio.User = os.Getenv("APP_MINIO_USER")
 	cfg.Minio.Pass = os.Getenv("APP_MINIO_PASS")
@@ -58,7 +78,7 @@ func NewConfig(path string) (*Config, error) {
 	cfg.Rabbitmq.User = os.Getenv("APP_RABBITMQ_USER")
 	cfg.Rabbitmq.Pass = os.Getenv("APP_RABBITMQ_PASS")
 
-	if err := cfg.validate(); err != nil {
+	if err := cfg.validateWorker(); err != nil {
 		return nil, err
 	}
 
@@ -73,7 +93,7 @@ func (c *Config) GetRabbitmqEndpoint() string {
 	return fmt.Sprintf("amqp://%s:%s@%s:%s/", c.Rabbitmq.User, c.Rabbitmq.Pass, c.Rabbitmq.Host, c.Rabbitmq.Port)
 }
 
-func (c *Config) validate() error {
+func (c *Config) validateApi() error {
 	if c.Server.GRPCPort == "" || c.Server.RESTPort == "" {
 		return errors.New("missing server config")
 	}
@@ -87,17 +107,25 @@ func (c *Config) validate() error {
 		return errors.New("missing redis config")
 	}
 
-	if c.Minio.InternalEndpoint == "" || c.Minio.ExternalEndpoint == "" || c.Minio.ServerPort == "" ||
-		c.Minio.User == "" || c.Minio.Pass == "" {
-		return errors.New("missing minio config")
-	}
-
 	if c.AuthService.Host == "" || c.AuthService.Port == "" {
 		return errors.New("missing auth-service config")
 	}
 
 	if c.CatalogService.Host == "" || c.CatalogService.Port == "" {
 		return errors.New("missing catalog-service config")
+	}
+
+	if c.Rabbitmq.Host == "" || c.Rabbitmq.Port == "" || c.Rabbitmq.User == "" || c.Rabbitmq.Pass == "" {
+		return errors.New("missing rabbitmq config")
+	}
+
+	return nil
+}
+
+func (c *Config) validateWorker() error {
+	if c.Minio.InternalEndpoint == "" || c.Minio.ExternalEndpoint == "" || c.Minio.ServerPort == "" ||
+		c.Minio.User == "" || c.Minio.Pass == "" {
+		return errors.New("missing minio config")
 	}
 
 	if c.Rabbitmq.Host == "" || c.Rabbitmq.Port == "" || c.Rabbitmq.User == "" || c.Rabbitmq.Pass == "" {
