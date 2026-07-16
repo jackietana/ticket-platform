@@ -21,7 +21,7 @@ func main() {
 		configPath = "./order-service/configs/local.yaml"
 	}
 
-	cfg, err := config.NewConfig(configPath)
+	cfg, err := config.NewWorkerConfig(configPath)
 	if err != nil {
 		log.Fatalf("error creating config: %v", err)
 	}

@@ -35,7 +35,7 @@ func main() {
 		configPath = "./order-service/configs/local.yaml"
 	}
 
-	cfg, err := config.NewConfig(configPath)
+	cfg, err := config.NewApiConfig(configPath)
 	if err != nil {
 		log.Fatalf("error creating config: %v", err)
 	}
@@ -50,6 +50,7 @@ func main() {
 	}
 
 	redisConn := pkgcache.NewRedisConnection(fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port), cfg.Redis.Pass)
+
 	mqChan, err := mq.NewRabbitMQChannel(cfg.GetRabbitmqEndpoint())
 	if err != nil {
 		log.Fatalf("failed to create rabbitmq channel: %v", err)

@@ -3,5 +3,6 @@ FROM alpine:3.19
 WORKDIR /app
 
 COPY order-service/order-worker .
+COPY order-service/configs/main.yaml ./configs/main.yaml
 
 CMD ["./order-worker"]
