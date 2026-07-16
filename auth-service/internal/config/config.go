@@ -28,14 +28,13 @@ func NewConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal yaml: %w", err)
 	}
 
-	cfg.Postgres.Host = os.Getenv("APP_DB_HOST")
 	cfg.Postgres.Name = os.Getenv("APP_AUTH_DB_NAME")
 	cfg.Postgres.User = os.Getenv("APP_DB_USER")
 	cfg.Postgres.Pass = os.Getenv("APP_DB_PASS")
 	cfg.Postgres.SSLMode = os.Getenv("APP_DB_SSLMODE")
 
-	cfg.Redis.Host = os.Getenv("APP_REDIS_HOST")
 	cfg.Redis.Pass = os.Getenv("APP_REDIS_PASS")
+
 	cfg.Salt = os.Getenv("APP_HASH_SALT")
 
 	if err := cfg.validate(); err != nil {
