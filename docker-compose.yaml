@@ -82,14 +82,10 @@ services:
       - "8081:8080"
       - "9091:9091"
     environment:
-      - APP_DB_HOST=${APP_DB_HOST:-postgres}
-      - APP_DB_PORT=5432
       - APP_DB_USER=${APP_DB_USER:-postgres}
       - APP_DB_PASS=${APP_DB_PASS:-postgres_pass}
       - APP_AUTH_DB_NAME=${APP_AUTH_DB_NAME:-auth_db}
       - APP_DB_SSLMODE=disable
-      - APP_REDIS_HOST=${APP_REDIS_HOST:-redis}
-      - APP_REDIS_PORT=6379
       - APP_REDIS_PASS=${APP_REDIS_PASS:-redis_pass}
       - APP_HASH_SALT=${APP_HASH_SALT:-hash_salt}
       - APP_MIGRATIONS_PATH=/app/migrations
@@ -111,8 +107,6 @@ services:
       - "8082:8080"
       - "9092:9092"
     environment:
-      - APP_DB_HOST=${APP_DB_HOST:-postgres}
-      - APP_DB_PORT=5432
       - APP_DB_USER=${APP_DB_USER:-postgres}
       - APP_DB_PASS=${APP_DB_PASS:-postgres_pass}
       - APP_CATALOG_DB_NAME=${APP_CATALOG_DB_NAME:-catalog_db}
@@ -129,26 +123,20 @@ services:
     networks:
       - ticket-network
 
-  order-service:
+  order-api:
     build:
       context: .
-      dockerfile: order-service/Dockerfile
-    container_name: order-service
+      dockerfile: order-service/Dockerfile.api
+    container_name: order-api
     ports:
       - "8083:8080"
       - "9093:9093"
     environment:
-      - APP_DB_HOST=${APP_DB_HOST:-postgres}
-      - APP_DB_PORT=5432
       - APP_DB_USER=${APP_DB_USER:-postgres}
       - APP_DB_PASS=${APP_DB_PASS:-postgres_pass}
       - APP_ORDER_DB_NAME=${APP_ORDER_DB_NAME:-order_db}
       - APP_DB_SSLMODE=disable
-      - APP_REDIS_HOST=${APP_REDIS_HOST:-redis}
-      - APP_REDIS_PORT=6379
       - APP_REDIS_PASS=${APP_REDIS_PASS:-redis_pass}
-      - APP_MINIO_USER=${APP_MINIO_USER:-user}
-      - APP_MINIO_PASS=${APP_MINIO_PASS:-minio_pass}
       - APP_RABBITMQ_USER=${APP_RABBITMQ_USER:-guest}
       - APP_RABBITMQ_PASS=${APP_RABBITMQ_PASS:-guest}
       - APP_MIGRATIONS_PATH=/app/migrations
@@ -158,12 +146,26 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     networks:
       - ticket-network
+
+  order-worker:
+    build:
+      context: .
+      dockerfile: order-service/Dockerfile.worker
+    container_name: order-worker
+    environment:
+      - APP_MINIO_USER=${APP_MINIO_USER:-user}
+      - APP_MINIO_PASS=${APP_MINIO_PASS:-minio_pass}
+      - APP_RABBITMQ_USER=${APP_RABBITMQ_USER:-guest}
+      - APP_RABBITMQ_PASS=${APP_RABBITMQ_PASS:-guest}
+    depends_on:
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
 volumes:
   pgdata:
