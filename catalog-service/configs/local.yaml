@@ -3,6 +3,7 @@ server:
   rest_port: "8082"
 
 postgres:
+  host: "localhost"
   port: "5432"
 
 minio:
