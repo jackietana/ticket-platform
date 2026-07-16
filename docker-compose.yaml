@@ -161,11 +161,14 @@ services:
       - APP_MINIO_PASS=${APP_MINIO_PASS:-minio_pass}
       - APP_RABBITMQ_USER=${APP_RABBITMQ_USER:-guest}
       - APP_RABBITMQ_PASS=${APP_RABBITMQ_PASS:-guest}
+      - APP_CONFIG_PATH=/app/configs/main.yaml
     depends_on:
       minio:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    networks:
+      - ticket-network
 
 volumes:
   pgdata:
