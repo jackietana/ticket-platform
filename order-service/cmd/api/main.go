@@ -23,7 +23,6 @@ import (
 	pkgcache "github.com/jackietana/ticket-platform/pkg/cache"
 	pkgpsql "github.com/jackietana/ticket-platform/pkg/database"
 	pkgclient "github.com/jackietana/ticket-platform/pkg/grpc"
-	pkgminio "github.com/jackietana/ticket-platform/pkg/minio"
 	"google.golang.org/grpc"
 )
 
@@ -102,28 +101,6 @@ func main() {
 		}
 	}()
 
-	// RabbitMQ dependencies
-	rabbitmqCtx, rabbitmqCancel := context.WithCancel(context.Background())
-
-	minioClient, err := pkgminio.NewMinioClient(&cfg.Minio)
-	if err != nil {
-		log.Fatalf("failed to connect to minio: %v", err)
-	}
-
-	fileStorage := repository.NewMinioStorage(minioClient)
-	if err := fileStorage.InitStorage(rabbitmqCtx); err != nil {
-		log.Fatalf("failed to init minio storage: %v", err)
-	}
-
-	mqServer := rabbitmq.NewOrderConsumer(mqChan, fileStorage)
-
-	go func() {
-		log.Println("rabbitmq server started")
-		if err := mqServer.StartListen(rabbitmqCtx); err != nil {
-			log.Fatalf("failed to listed rabbitmq: %v", err)
-		}
-	}()
-
 	// graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
@@ -140,6 +117,5 @@ func main() {
 
 	grpcServer.GracefulStop()
 
-	rabbitmqCancel()
 	log.Println("services successfully stoped")
 }
