@@ -81,7 +81,7 @@ The planned development phases focus on maximizing modularity and decoupling ser
 *   [x] **Asynchronous Communication**: Integration of a message broker (RabbitMQ) for service decoupling.
 *   [x] `order-service`: Implementation of the order management system with Redis booking pipelines and async ticket generation.
 *   [x] **Transactions & Payments**: Integration of a simulated payment gateway handler with transactional rollback capabilities.
+*   [x] **Physical Worker Decoupling**: Separate the `order-service` API and RabbitMQ Consumer into distinct physical Docker containers to allow independent horizontal scaling.
 
 ### Next Steps
-*   [ ] **Physical Worker Decoupling**: Separate the `order-service` API and RabbitMQ Consumer into distinct physical Docker containers to allow independent horizontal scaling.
 *   [ ] **Full Payment Microservice**: Extract the payment logic from `order-service` into a standalone `payment-service` interacting via gRPC / Webhooks.
