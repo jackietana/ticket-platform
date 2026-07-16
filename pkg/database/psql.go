@@ -36,7 +36,7 @@ func RunUpMigrations(cfg *pkgconfig.PostgresConfig, service string) error {
 	migrationsPath := os.Getenv("APP_MIGRATIONS_PATH")
 	if migrationsPath == "" {
 		_, b, _, _ := runtime.Caller(0)
-		migrationsPath = filepath.Join(filepath.Dir(b), "../../../initdb/migrations/", service)
+		migrationsPath = filepath.Join(filepath.Dir(b), "../../initdb/migrations/", service)
 	}
 	migrationDir := "file://" + migrationsPath
 
